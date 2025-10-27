@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <title>{{name}}</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+
+{% include "blueTable.css" %}
+
+######### HEAD STYLE #######
+{% include "blueTable.css" %}
+.head_1 {
+    text-align: left;
+    width: 30px;
+}
+.head_2 {
+    text-align: left;
+    width: 30px;
+}
+.head_3 {
+    text-align: left;
+    width: 150px;
+}
+.head_4 {
+    text-align: left;
+    width: 110px;
+}
+.head_5 {
+    text-align: left;
+    width: 30px;
+}
+.head_x {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  width: 50px;
+}
+######### CELL STYLE #######
+.cell_s {
+    text-align: right;
+}
+.cell_1 {
+    text-align: right;
+}
+.cell_2 {
+    text-align: left;
+}
+.cell_3 {
+    text-align: left;
+}
+.cell_4 {
+    text-align: left;
+}
+.cell_5 {
+    text-align: left;
+}
+
+.cell_x {
+    text-align: center;
+}
+</style>
+</head>
+
+<body>
+<div>
+{% include "sb-menu.html" %}
+</div>
+  <div>{{name}}</div>
+<table class="blueTable">
+<thead>
+
+<tr>
+<th class="head_1">NO</th>
+<th class="head_2">SUB</th>
+<th class="head_3">ชื่อSUB</th>
+<th class="head_4">จังหวัด</th>
+<th class="head_5">เขต</th>
+{% for (h,f) in flds %}
+{% let hh = format!("{h:?}") %}
+<th class="head_x">{{hh}}</th>
+{% endfor %}
+</tr>
+
+</thead>
+<tfoot>
+<tr>
+<td class="cell_1"></td>
+<td class="cell_2"></td>
+<td class="cell_3"></td>
+<td class="cell_4"></td>
+<td class="cell_5"></td>
+</tr>
+</tfoot>
+<tbody>
+
+{% for rw in assv.iter() %}
+{% let sbinf = sbif.get(rw.sbid).unwrap() %}
+<tr>
+  <td class="cell_s">{{loop.index}}</td>
+  <td class="cell_2">{{rw.sbid}}</td>
+  <td class="cell_3"><a href="/tr01?sbid={{rw.sbid}}">{{sbinf.name}}</a></td>
+  <td class="cell_4">{{rw.pvid}}</td>
+  <td class="cell_5">{{rw.arid}}</td>
+{% for (h,p) in flds %}
+{% if p.is_empty() %}
+<td class="cell_x">{{rw.v[h.tousz()].v.pan3()}}</td>
+{% else %}
+<td class="cell_x"><a href="{{p}}?sbid={{rw.sbid}}">{{rw.v[h.tousz()].v.pan3()}}</a></td>
+{% endif %}
+{% endfor %}
+</tr>
+
+{% endfor %}
+</tbody>
+</table>
+
+<script>
+const inps = document.querySelectorAll("input");
+for (let i = 0; i < inps.length; i++) {
+  inps[i].style.backgroundColor = "red";
+}
+</script>
+ </body>
+</html>
+

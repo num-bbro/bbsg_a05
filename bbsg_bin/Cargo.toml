@@ -1,0 +1,9 @@
+[package]
+name = "bbsg_bin"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bbsg_a05 = { path = "../bbsg_a05" }
+tokio = { version = "1.47.0", features = ["full"] }
+

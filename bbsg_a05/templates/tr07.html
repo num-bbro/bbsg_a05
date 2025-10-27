@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <title>{{name}}</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+
+{% include "blueTable.css" %}
+
+######### HEAD STYLE #######
+{% include "blueTable.css" %}
+.head_1 {
+    text-align: left;
+    width: 30px;
+}
+.head_2 {
+    text-align: left;
+    width: 30px;
+}
+.head_3 {
+    text-align: left;
+    width: 60px;
+}
+.head_4 {
+    text-align: left;
+    width: 90px;
+}
+.head_5 {
+    text-align: left;
+    width: 40px;
+}
+.head_6 {
+    text-align: left;
+    width: 70px;
+}
+.head_7 {
+    text-align: left;
+    width: 40px;
+}
+.head_8 {
+    text-align: left;
+    width: 40px;
+}
+.head_x {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  width: 50px;
+}
+######### CELL STYLE #######
+.cell_s {
+    text-align: right;
+}
+.cell_1 {
+    text-align: left;
+}
+.cell_2 {
+    text-align: left;
+}
+.cell_3 {
+    text-align: left;
+}
+.cell_4 {
+    text-align: left;
+}
+.cell_5 {
+    text-align: left;
+}
+.cell_6 {
+    text-align: left;
+}
+.cell_7 {
+    text-align: center;
+}
+.cell_8 {
+    text-align: center;
+}
+.cell_x {
+    text-align: center;
+}
+</style>
+</head>
+
+<body>
+<div>
+{% include "sb-menu.html" %}
+&nbsp;
+&nbsp;
+{% include "tr-menu.html" %}
+</div>
+  <div>{{name}}</div>
+<table class="blueTable">
+<thead>
+
+<tr>
+<th class="head_1">NO</th>
+<th class="head_2">SUB</th>
+<th class="head_3">จังหวัด</th>
+<th class="head_4">AOJ</th>
+<th class="head_5">feed</th>
+<th class="head_6">PEANO</th>
+<th class="head_7">OWN</th>
+<th class="head_8">EV</th>
+{% for (h,f) in WE_EV %}
+{% let hh = format!("{h:?}") %}
+<th class="head_x">{{hh}}</th>
+{% endfor %}
+</tr>
+
+</thead>
+<tfoot>
+<tr>
+<td class="cell_1"></td>
+<td class="cell_2"></td>
+<td class="cell_3"></td>
+<td class="cell_4"></td>
+<td class="cell_5"></td>
+</tr>
+</tfoot>
+<tbody>
+
+{% let max0 = &maxv[0] %}
+{% let max1 = &maxv[1] %}
+{% let max2 = &maxv[2] %}
+
+<tr>
+<td colspan=8>MAX0</td>
+{% for (i,(h,_)) in WE_EV.iter().enumerate() %}
+<td class="cell_x">{{max0.v[h.tousz()].v.pan3()}}</td>
+{% endfor %}
+</tr>
+
+{% for ((rw,no),ev) in assv.iter().zip(norv.iter()).zip(evs.iter()) %}
+<tr>
+  <td class="cell_s">{{loop.index}}</td>
+  <td class="cell_2">{{rw.sbid}}</td>
+  <td class="cell_3">{{rw.pvid}}</td>
+  <td class="cell_4">{{rw.aoj}}</td>
+  <td class="cell_5">{{rw.fdid}}</td>
+  <td class="cell_6">{{rw.peano}}</td>
+  <td class="cell_7">{{rw.own}}</td>
+  <td class="cell_8">{{rw.v[VarType::HmChgEvTrVc01.tousz()].v.pan3()}}</td>
+{% for (h,_) in WE_EV %}
+<td class="cell_x">{{rw.v[h.tousz()].v.pan3()}}</td>
+{% endfor %}
+</tr>
+
+<tr>
+  <td colspan=8 style='text-align: right'>normalized</td>
+{% for (h,_) in WE_EV %}
+<td class="cell_x">{{no.v[h.tousz()].v.pan3()}}</td>
+{% endfor %}
+</tr>
+
+<tr>
+  <td colspan=8 style='text-align: right'>evs</td>
+{% for (h,_) in WE_EV %}
+<td class="cell_x">{{ev.v[h.tousz()].v.pan3()}}</td>
+{% endfor %}
+</tr>
+
+{% endfor %}
+</tbody>
+</table>
+
+<script>
+const inps = document.querySelectorAll("input");
+for (let i = 0; i < inps.length; i++) {
+  inps[i].style.backgroundColor = "red";
+}
+</script>
+ </body>
+</html>
+

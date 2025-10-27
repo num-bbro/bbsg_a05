@@ -1,0 +1,121 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <title>{{name}}</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+
+{% include "blueTable.css" %}
+
+######### HEAD STYLE #######
+{% include "blueTable.css" %}
+.head_1 {
+    text-align: left;
+}
+.head_2 {
+    text-align: left;
+}
+.head_3 {
+    text-align: left;
+}
+.head_4 {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+}
+.head_5 {
+    text-align: left;
+}
+{%~ for y in SSHOW_YEAR_BEG..=SSHOW_YEAR_END -%}
+{%- let hof = y-SSHOW_YEAR_BEG + 6 ~%}
+.head_{{hof}} {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+}
+{%- endfor %}
+######### CELL STYLE #######
+.cell_1 {
+    text-align: center;
+    width: 30px;
+}
+.cell_2 {
+    text-align: center;
+    width: 30px;
+}
+.cell_3 {
+    text-align: left;
+    width: 70px;
+}
+.cell_4 {
+    text-align: right;
+    width: 30px;
+}
+.cell_5 {
+    text-align: right;
+    width: 40px;
+}
+{%- for y in SSHOW_YEAR_BEG..=SSHOW_YEAR_END -%}
+{%- let hof = y-SSHOW_YEAR_BEG + 6 ~%}
+.cell_{{-hof-}} {
+    text-align: right;
+    width: 40px;
+}
+{%- endfor %}
+</style>
+</head>
+
+<body>
+<div>
+{% include "menu.html" %}
+</div>
+  <div>{{name}}</div>
+<table class="blueTable">
+<thead>
+<tr>
+<th class="head_1">NO</th>
+<th class="head_2">SUB</th>
+<th class="head_3">จังหวัด</th>
+<th class="head_4">note</th>
+<th class="head_5">EVrt</th>
+{% for y in SSHOW_YEAR_BEG..=SSHOW_YEAR_END %}
+{% let hof = y-SSHOW_YEAR_BEG + 6 %}
+<th class="head_{{hof}}">{{y}}</th>
+{% endfor %}
+</tr>
+</thead>
+<tfoot>
+<tr>
+<td class="cell_1"></td>
+<td class="cell_2"></td>
+<td class="cell_3"></td>
+<td class="cell_4"></td>
+<td class="cell_5"></td>
+</tr>
+</tfoot>
+<tbody>
+{% for rw in rows %}
+<tr>
+  <td class="cell_1">{{loop.index}}</td>
+  <td class="cell_2">{{rw.sbid}}</td>
+  <td class="cell_3">{{rw.pvid}}</td>
+  <td class="cell_4">{{rw.note}}</td>
+  <td class="cell_5">{{(rw.evrt*100f32).pan3()}}%</td>
+{%~ for y in SSHOW_YEAR_BEG..=SSHOW_YEAR_END %}
+{% let oi = y-SSHOW_YEAR_BEG%}
+{% let of = oi + 6 %}
+<td class="cell_{{of}}">{{rw.evgr[oi].pan3()}}</td>
+{% endfor ~%}
+
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+ </body>
+</html>
+

@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <title>{{name}}</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+
+{% include "blueTable.css" %}
+
+######### HEAD STYLE #######
+{% include "blueTable.css" %}
+.head_1 {
+    text-align: left;
+}
+.head_2 {
+    text-align: left;
+}
+.head_3 {
+    text-align: left;
+}
+.head_4 {
+    text-align: left;
+}
+.head_5 {
+    text-align: left;
+}
+.head_6 {
+    text-align: left;
+}
+.head_7 {
+    text-align: left;
+}
+######### CELL STYLE #######
+.cell_1 {
+    text-align: center;
+    width: 30px;
+}
+.cell_2 {
+    text-align: center;
+    width: 30px;
+}
+.cell_3 {
+    text-align: left;
+    width: 70px;
+}
+.cell_4 {
+    text-align: right;
+    width: 50px;
+}
+.cell_5 {
+    text-align: right;
+    width: 50px;
+}
+.cell_6 {
+    text-align: right;
+    width: 50px;
+}
+.cell_7 {
+    text-align: right;
+    width: 50px;
+}
+</style>
+</head>
+
+<body>
+<div>
+{% include "menu.html" %}
+</div>
+  <div>{{name}}</div>
+<table class="blueTable">
+<thead>
+<tr>
+<th class="head_1">NO</th>
+<th class="head_2">SUB</th>
+<th class="head_3">จังหวัด</th>
+<th class="head_4">UnbalPowLossKw</th>
+<th class="head_5">CntTrSatLoss</th>
+<th class="head_6">CntTrUnbalLoss</th>
+<th class="head_7">SmallSell</th>
+</tr>
+</thead>
+<tfoot>
+<tr>
+<td class="cell_1"></td>
+<td class="cell_2"></td>
+<td class="cell_3"></td>
+<td class="cell_4"></td>
+<td class="cell_5"></td>
+<td class="cell_6"></td>
+<td class="cell_7"></td>
+</tr>
+</tfoot>
+<tbody>
+{% for rw in rows %}
+<tr>
+  <td class="cell_1">{{loop.index}}</td>
+  <td class="cell_2">{{rw.sbid}}</td>
+  <td class="cell_3">{{rw.pvid}}</td>
+  <td class="cell_4">{{rw.unba.pan2()}}</td>
+  <td class="cell_5">{{rw.ovld.pan0()}}</td>
+  <td class="cell_6">{{rw.povl.pan0()}}</td>
+  <td class="cell_7">{{rw.smal.pan2()}}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+ </body>
+</html>
+

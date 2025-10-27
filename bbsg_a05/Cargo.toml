@@ -1,0 +1,43 @@
+[package]
+name = "bbsg_a05"
+version = "0.1.0"
+edition = "2024"
+authors = ["num-bbro <num@bbro.jp>"]
+description = "bbsg_a05"
+license = "MIT OR Apache-2.0"
+homepage = "https://bbro.jp"
+repository = "https://github.com/num-bbro/sglab02/tree/main/sglab02_bin"
+
+[dependencies]
+ab_glyph = "0.2.30"
+bincode = "2.0.1"
+chrono = "0.4.41"
+csv = "1.3.1"
+geo = "0.30.0"
+geo-types = "0.7.16"
+image = "0.25.6"
+imageproc = "0.25.0"
+iterstats = "0.7.0"
+num = "0.4.3"
+phf = "0.12.1"
+phf_macros = "0.12.1"
+regex = "1.11.1"
+serde = "1.0.219"
+sglab02_lib = "0.1.6"
+sglib03 = "0.1.0"
+sglib04 = "0.1.3"
+sha256 = "1.6.0"
+strum = "0.27.2"
+strum_macros = "0.27.2"
+askama = "0.14.0"
+askama_web = { version = "0.14.5", features = ["axum-0.8"] }
+axum = "0.8.4"
+tokio = { version = "1.47.0", features = ["full"] }
+financial = "1.1.5"
+
+[features]
+dcl = []
+imp = []
+utl = []
+default = ["dcl","imp","utl"]
+
