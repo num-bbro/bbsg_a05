@@ -430,8 +430,8 @@ pub const WE_UC1: [(VarType, f32); 11] = [
     (VarType::HmChgEvTr, 0.28),
     (VarType::CntLvPowSatTr, 0.15),
     (VarType::ChgStnCap, 0.05),
-    (VarType::MvPowSatTr, 0.05),
-    //(VarType::PowTrSat, 0.05),
+    //(VarType::MvPowSatTr, 0.05),
+    (VarType::PowTrSat, 0.05),
     (VarType::SolarRoof, 0.15),
     (VarType::ZoneTr, 0.05),
     (VarType::PopTr, 0.05),
@@ -445,8 +445,8 @@ pub const WE_UC2: [(VarType, f32); 10] = [
     (VarType::HmChgEvTr, 0.10),
     (VarType::CntLvPowSatTr, 0.15),
     (VarType::ChgStnCap, 0.05),
-    //(VarType::PowTrSat, 0.15),
-    (VarType::MvPowSatTr, 0.15),
+    (VarType::PowTrSat, 0.15),
+    //(VarType::MvPowSatTr, 0.15),
     (VarType::SolarEnergy, 0.15),
     (VarType::ZoneTr, 0.05),
     (VarType::PopTr, 0.05),
@@ -760,7 +760,7 @@ pub const OPEX_FLDS: [VarType; 6] = [
     VarType::CstCommOp,
 ];
 
-pub const SHOW_FLDS: [VarType; 54] = [
+pub const SHOW_FLDS: [VarType; 62] = [
     VarType::FirEvChgThb,
     VarType::FirEtChgThb,
     VarType::FirEbChgThb,
@@ -814,8 +814,17 @@ pub const SHOW_FLDS: [VarType; 54] = [
     VarType::CstOpEx,
     VarType::CstCapOpEx,
     VarType::FirSum,
-    VarType::EirSum,
     VarType::FirCstRate,
+    // ===== SUM
+    VarType::EirCustLossSave,
+    VarType::EirConsumSave,
+    VarType::EirGrnHsEmsSave,
+    VarType::EirCustMvRev,
+    VarType::EirCustEvSave,
+    VarType::EirCustEtrkSave,
+    VarType::EirSolaRfTopSave,
+    VarType::EirEnerResvSave,
+    VarType::EirSum,
     VarType::EirCstRate,
 ];
 

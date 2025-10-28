@@ -217,3 +217,92 @@ pub fn cst_comm_op(_sbtr: &SubCalc, no: f32) -> Vec<f32> {
     }
     csts
 }
+
+pub fn eir_cust_loss_save(no: f32) -> Vec<f32> {
+    let cst = no * 0.01;
+    let mut csts = Vec::<f32>::new();
+    for _i in 0..3 {
+        csts.push(0f32);
+    }
+    for _i in 0..12 {
+        csts.push(cst);
+    }
+    csts
+}
+pub fn eir_cust_save(no: f32) -> Vec<f32> {
+    let cst = no * 0.05;
+    let mut csts = Vec::<f32>::new();
+    for _i in 0..3 {
+        csts.push(0f32);
+    }
+    for _i in 0..12 {
+        csts.push(cst);
+    }
+    csts
+}
+pub fn eir_ghg_save(no: f32) -> Vec<f32> {
+    let cst = no * 0.10;
+    let mut csts = Vec::<f32>::new();
+    for _i in 0..3 {
+        csts.push(0f32);
+    }
+    for _i in 0..12 {
+        csts.push(cst);
+    }
+    csts
+}
+pub fn eir_cust_mv_rev(no: f32) -> Vec<f32> {
+    let cst = no * 0.13;
+    let mut csts = Vec::<f32>::new();
+    for _i in 0..3 {
+        csts.push(0f32);
+    }
+    for _i in 0..12 {
+        csts.push(cst);
+    }
+    csts
+}
+pub fn eir_cust_ev_save(no: f32) -> Vec<f32> {
+    let cst = no * 0.09;
+    let mut csts = Vec::<f32>::new();
+    for _i in 0..3 {
+        csts.push(0f32);
+    }
+    for _i in 0..12 {
+        csts.push(cst);
+    }
+    csts
+}
+pub fn eir_cust_etruck_save(no: f32) -> Vec<f32> {
+    let cst = no * 0.08;
+    let mut csts = Vec::<f32>::new();
+    for _i in 0..3 {
+        csts.push(0f32);
+    }
+    for _i in 0..12 {
+        csts.push(cst);
+    }
+    csts
+}
+pub fn eir_cust_solar_roof(no: f32) -> Vec<f32> {
+    let cst = no * 0.06;
+    let mut csts = Vec::<f32>::new();
+    for _i in 0..3 {
+        csts.push(0f32);
+    }
+    for _i in 0..12 {
+        csts.push(cst);
+    }
+    csts
+}
+pub fn eir_en_rev_save(no: f32) -> Vec<f32> {
+    let cst = no * 0.10;
+    let mut csts = Vec::<f32>::new();
+    for _i in 0..3 {
+        csts.push(0f32);
+    }
+    for _i in 0..12 {
+        csts.push(cst);
+    }
+    csts
+}

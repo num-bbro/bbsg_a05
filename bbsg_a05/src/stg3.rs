@@ -292,6 +292,58 @@ pub fn stage_03() -> Result<(), Box<dyn Error>> {
                 sbas.vy[VarType::CstPlfmOp.tousz()].append(&mut cst_plfm_op(sbtr, nodev));
                 sbas.vy[VarType::CstCommOp.tousz()].append(&mut cst_comm_op(sbtr, nodev));
 
+                use crate::cst1::eir_cust_etruck_save;
+                use crate::cst1::eir_cust_ev_save;
+                use crate::cst1::eir_cust_loss_save;
+                use crate::cst1::eir_cust_mv_rev;
+                use crate::cst1::eir_cust_save;
+                use crate::cst1::eir_cust_solar_roof;
+                use crate::cst1::eir_en_rev_save;
+                use crate::cst1::eir_ghg_save;
+
+                let sel = sbas.v[VarType::AllSellTr.tousz()].v;
+
+                sbas.vy[VarType::EirCustLossSave.tousz()].append(&mut eir_cust_loss_save(sel));
+                sbas.vy[VarType::EirConsumSave.tousz()].append(&mut eir_cust_save(sel));
+                sbas.vy[VarType::EirGrnHsEmsSave.tousz()].append(&mut eir_ghg_save(sel));
+                sbas.vy[VarType::EirCustMvRev.tousz()].append(&mut eir_cust_mv_rev(sel));
+                sbas.vy[VarType::EirCustEvSave.tousz()].append(&mut eir_cust_ev_save(sel));
+                sbas.vy[VarType::EirCustEtrkSave.tousz()].append(&mut eir_cust_etruck_save(sel));
+                sbas.vy[VarType::EirSolaRfTopSave.tousz()].append(&mut eir_cust_solar_roof(sel));
+                sbas.vy[VarType::EirEnerResvSave.tousz()].append(&mut eir_en_rev_save(sel));
+
+                sbas.v[VarType::EirCustLossSave.tousz()].v =
+                    sbas.vy[VarType::EirCustLossSave.tousz()].iter().sum();
+                sbas.v[VarType::EirConsumSave.tousz()].v =
+                    sbas.vy[VarType::EirConsumSave.tousz()].iter().sum();
+                sbas.v[VarType::EirGrnHsEmsSave.tousz()].v =
+                    sbas.vy[VarType::EirGrnHsEmsSave.tousz()].iter().sum();
+                sbas.v[VarType::EirCustMvRev.tousz()].v =
+                    sbas.vy[VarType::EirCustMvRev.tousz()].iter().sum();
+                sbas.v[VarType::EirCustEvSave.tousz()].v =
+                    sbas.vy[VarType::EirCustEvSave.tousz()].iter().sum();
+                sbas.v[VarType::EirCustEtrkSave.tousz()].v =
+                    sbas.vy[VarType::EirCustEtrkSave.tousz()].iter().sum();
+                sbas.v[VarType::EirSolaRfTopSave.tousz()].v =
+                    sbas.vy[VarType::EirSolaRfTopSave.tousz()].iter().sum();
+                sbas.v[VarType::EirEnerResvSave.tousz()].v =
+                    sbas.vy[VarType::EirEnerResvSave.tousz()].iter().sum();
+
+                sbas.v[VarType::CstMet1pIns.tousz()].v =
+                    sbas.vy[VarType::CstMet1pIns.tousz()].iter().sum();
+
+                sbas.v[VarType::CstMet1pIns.tousz()].v =
+                    sbas.vy[VarType::CstMet1pIns.tousz()].iter().sum();
+
+                sbas.v[VarType::CstMet1pIns.tousz()].v =
+                    sbas.vy[VarType::CstMet1pIns.tousz()].iter().sum();
+
+                sbas.v[VarType::CstMet1pIns.tousz()].v =
+                    sbas.vy[VarType::CstMet1pIns.tousz()].iter().sum();
+
+                sbas.v[VarType::CstMet1pIns.tousz()].v =
+                    sbas.vy[VarType::CstMet1pIns.tousz()].iter().sum();
+
                 sbas.v[VarType::CstMet1pIns.tousz()].v =
                     sbas.vy[VarType::CstMet1pIns.tousz()].iter().sum();
                 sbas.v[VarType::CstMet3pIns.tousz()].v =
