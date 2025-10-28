@@ -547,8 +547,10 @@ pub fn stage_03() -> Result<(), Box<dyn Error>> {
                 let guess = Some(0.);
                 let fir: Vec<f64> = fir_cpx_opx.iter().map(|n| *n as f64).collect();
                 let firr = financial::irr(&fir, guess).unwrap_or(0f64);
+                let firr = firr * 100.0;
                 let eir: Vec<f64> = eir_cpx_opx.iter().map(|n| *n as f64).collect();
                 let eirr = financial::irr(&eir, guess).unwrap_or(0f64);
+                let eirr = eirr * 100.0;
                 //println!("FIRR: {}", firr);
 
                 sbas.vy[VarType::FirCstRate.tousz()] = fir_cpx_opx;
