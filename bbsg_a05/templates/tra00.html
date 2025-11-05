@@ -16,19 +16,19 @@
 }
 .head_2 {
     text-align: left;
-    width: 30px;
+    width: 60px;
 }
 .head_3 {
     text-align: left;
-    width: 150px;
+    width: 80px;
 }
 .head_4 {
     text-align: left;
-    width: 110px;
+    width: 100px;
 }
 .head_5 {
     text-align: left;
-    width: 30px;
+    width: 60px;
 }
 .head_6 {
     text-align: left;
@@ -97,21 +97,33 @@
 <tr>
 {% for h in shwfld %}
 {% let hh = format!("{h:?}") %}
-<th class="field"><a href="?fld={{hh}}">{{hh}}</a></th>
+<th class="field">
+  <a href="?fld={{hh}}&sbid={{sbid}}&fdid={{fdid}}">{{hh}}</a>
+</th>
 {% endfor %}
 </tr>
 </table>
-<div>{{name}}</div>
-
+<div>{{name}}
+&nbsp;&nbsp;&nbsp; 
+[ field:{{fld}} ]
+&nbsp;&nbsp;&nbsp; 
+[ feeder:{{fdid}} ]
+&nbsp;&nbsp;&nbsp;  
+[
+{% for fdid in &sbinf.feeders %}
+  <a href="?fld={{fld}}&sbid={{sbid}}&fdid={{fdid}}">{{fdid}}</a>
+{% endfor %}
+]
+</div>
 <table class="blueTable">
 <thead>
-1
+
 <tr>
 <th class="head_1">NO</th>
-<th class="head_2">SUB</th>
-<th class="head_3">ชื่อSUB</th>
-<th class="head_4">จังหวัด</th>
-<th class="head_5">เขต</th>
+<th class="head_2">ฟีดเดอร์</th>
+<th class="head_3">หม้อแปลง</th>
+<th class="head_4">กฟส</th>
+<th class="head_5"></th>
 <th class="head_6">รวม</th>
 {%~ for y in 0..=SSHOW_YEAR_END-SSHOW_YEAR_BEG %}
 <td class="hdyr_{{y}}">{{y+2026}}</td>
@@ -123,15 +135,20 @@
 <tbody>
 
 {% for rw in assv.iter() %}
-{% let sbif0 = SubInfo::default() %}
-{% let sbinf = sbif.get(rw.sbid).unwrap_or(&sbif0) %}
 <tr>
   <td class="cell_s">{{loop.index}}</td>
-  <td class="cell_2">{{rw.sbid}}</td>
-  <td class="cell_3"><a href="/tra01?sbid={{rw.sbid}}">{{sbinf.name}}</a></td>
-  <td class="cell_4">{{rw.pvid}}</td>
-  <td class="cell_5">{{rw.arid}}</td>
-<td class="cell_x">{{rw.v[se_fld.tousz()].v.pan(2)}}</td>
+  <td class="cell_2">{{rw.fdid}}</td>
+  <td class="cell_3"><a href="/tr01?sbid={{rw.sbid}}">{{rw.peano}}</a></td>
+  <td class="cell_4">{{rw.aoj}}</td>
+  {% let (x,y) = rw.n1d.n1d_2_latlon() %}
+  {% let utm = format!("{x},{y}") %}
+  {% let url = format!("https://www.google.com/maps/search/?api=1&query={x},{y}") %}
+  <td class="cell_5">
+    <a href="{{url}}" target="_blank">
+    {{utm}}
+    </a>
+  </td>
+<td class="cell_x">{{rw.v[se_fld.tousz()].v.pan(0)}}</td>
 {% for vv in rw.vy[se_fld.tousz()] %}
 <td class="cell_x">{{vv.pan(0)}}</td>
 {% endfor %}

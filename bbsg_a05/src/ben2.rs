@@ -1,8 +1,10 @@
+use crate::dcl::PeaAssVar;
+use crate::dcl::VarType;
 use crate::stg3::ASSET_WORTH_RATIO;
 use crate::stg3::MODEL_ENTRY_COST;
 use crate::stg3::MODEL_ENTRY_RATIO;
 use num::pow::Pow;
-use sglib04::prc41::SubCalc;
+//use sglib04::prc41::SubCalc;
 use sglib04::web1::ECO_GRW_RATE;
 use sglib04::web1::ENERGY_GRW_RATE;
 use sglib04::web1::M1P_COST;
@@ -13,17 +15,16 @@ use sglib04::web1::UNIT_PRICE;
 pub const SMETER_ACCU_IMPRV: f32 = 0.01f32;
 pub const SMETER_BILL_IMPRV: f32 = 0.4f32;
 
-pub fn ben_bill_accu(sbtr: &SubCalc) -> Vec<f32> {
+pub fn ben_bill_accu(tras: &PeaAssVar) -> Vec<f32> {
     let mut proj = vec![0.0, 0.0, 0.0];
     for y in 0..12 {
-        let be = sbtr.eg_sm as f64 * SMETER_ACCU_IMPRV as f64 * SMETER_BILL_IMPRV as f64;
-        let be = be * 30f64;
-        let be = be * UNIT_PRICE as f64;
-        let be = be / Pow::pow(1f64 + ENERGY_GRW_RATE as f64, y as f64);
-        let be = be * Pow::pow(1f64 + ECO_GRW_RATE as f64, y as f64);
+        let be = tras.v[VarType::AllSellTr.tousz()].v * SMETER_ACCU_IMPRV * SMETER_BILL_IMPRV;
+        let be = be * 30.0;
+        let be = be * UNIT_PRICE;
+        let be: f32 = be / Pow::pow(1.0 + ENERGY_GRW_RATE, y);
+        let be: f32 = be * Pow::pow(1.0 + ECO_GRW_RATE, y);
         let be = be * 0.1;
-        //print!(" {}-{be:.2}", y + 2028);
-        proj.push(be as f32);
+        proj.push(be);
     }
     proj
 }
@@ -33,13 +34,13 @@ pub const CASH_DAY_DELAY_80: f32 = 2.5; // days delays for 80% of meter
 pub const CASH_DAY_DELAY_20: f32 = 12.5; // days delays for 80% of meter
 pub const CASH_DAY_DELAY_SMART: f32 = 2.0;
 
-pub fn ben_cash_flow(sbtr: &SubCalc) -> Vec<f32> {
-    let al0 = sbtr.eg_sm;
+pub fn ben_cash_flow(tras: &PeaAssVar) -> Vec<f32> {
+    let al0 = tras.v[VarType::AllSellTr.tousz()].v;
     let dl_80 = CASH_DAY_DELAY_80;
     let dl_20 = CASH_DAY_DELAY_20;
     let dl_0 = dl_80 * 0.8 + dl_20 * 0.2; // average days delay of cash flow
     let dl_d = dl_0 - CASH_DAY_DELAY_SMART; // diff days improved
-    let dl_m1 = al0 as f32 * UNIT_PRICE / 365.0 * dl_d * CASH_FLOW_COST;
+    let dl_m1 = al0 * UNIT_PRICE / 365.0 * dl_d * CASH_FLOW_COST;
     let mut proj = vec![0.0, 0.0, 0.0];
     for y in 0..12 {
         let be = dl_m1 as f64;
@@ -50,36 +51,36 @@ pub fn ben_cash_flow(sbtr: &SubCalc) -> Vec<f32> {
         //print!(" {}-{be:.2}", y + 2028);
         proj.push(be as f32);
     }
-    //println!();
-    //BenProj { proj }
     proj
 }
 
 pub const DR_DEV_PLAN_RATE: f32 = 0.02f32;
+pub const MET_1PH_COST: f32 = 2_500.0;
+pub const MET_3PH_COST: f32 = 4_500.0;
 
-pub fn ben_dr_save(sbtr: &SubCalc) -> Vec<f32> {
+pub fn ben_dr_save(tras: &PeaAssVar) -> Vec<f32> {
     //let cap1 = 80_000_000f64 / 22_000_000f64;
     //let cap2 = 20_000_000f64 / 22_000_000f64;
     //print!("====  Demand Response ");
-    let mt_1_ph = sbtr.mt_1_ph as f64 * DR_DEV_PLAN_RATE as f64;
-    let mt_3_ph = sbtr.mt_3_ph as f64 * DR_DEV_PLAN_RATE as f64;
-    let cap3 = mt_1_ph * 2_500f64;
-    let cap4 = mt_3_ph * 4_650f64;
+    let mt_1_ph = tras.v[VarType::NoMet1Ph.tousz()].v * DR_DEV_PLAN_RATE;
+    let mt_3_ph = tras.v[VarType::NoMet3Ph.tousz()].v * DR_DEV_PLAN_RATE;
+    let cap3 = mt_1_ph * MET_1PH_COST;
+    let cap4 = mt_3_ph * MET_3PH_COST;
     let opx1 = cap3 * 0.005;
     let opx2 = cap4 * 0.005;
-    let opx3 = (mt_1_ph + mt_3_ph) * 55f64 * 12f64;
-    let opx4 = cap3 * 0.05f64;
-    let opx5 = cap4 * 0.05f64;
+    let opx3 = (mt_1_ph + mt_3_ph) * 55.0 * 12.0;
+    let opx4 = cap3 * 0.05;
+    let opx5 = cap4 * 0.05;
     //let mut proj = Vec::<(u32, f32)>::new();
     let mut proj = vec![0.0, 0.0, 0.0];
     for y in 0..12 {
-        let be = if y == 0 { cap3 + cap4 } else { 0f64 };
+        let be = if y == 0 { cap3 + cap4 } else { 0.0 };
         let be = be + opx1 + opx2 + opx3 + opx4 + opx5;
         // adjust
-        let be = be * 1.1f64;
-        let be = be / Pow::pow(1f64 + ENERGY_GRW_RATE as f64, y as f64);
-        let be = be * Pow::pow(1f64 + ECO_GRW_RATE as f64, y as f64);
-        proj.push(be as f32);
+        let be = be * 1.1;
+        let be = be / Pow::pow(1.0 + ENERGY_GRW_RATE, y);
+        let be = be * Pow::pow(1.0 + ECO_GRW_RATE, y);
+        proj.push(be);
     }
     proj
 }
@@ -87,19 +88,18 @@ pub fn ben_dr_save(sbtr: &SubCalc) -> Vec<f32> {
 pub const BOX_LINE_NEED_RATE: f32 = 0.05f32;
 pub const BOX_LINE_UNIT_COST: f32 = 172.41f32;
 
-pub fn ben_boxline_save(sbtr: &SubCalc) -> Vec<f32> {
+pub fn ben_boxline_save(tras: &PeaAssVar) -> Vec<f32> {
     //print!("====  BOX : ");
-    let boxcnt = (sbtr.mt_1_ph + sbtr.mt_3_ph) as f64 * BOX_LINE_NEED_RATE as f64;
-    let boxex = boxcnt * BOX_LINE_UNIT_COST as f64;
+    let boxcnt = tras.v[VarType::NoMet1Ph.tousz()].v + tras.v[VarType::NoMet3Ph.tousz()].v;
+    let boxcnt = boxcnt * BOX_LINE_NEED_RATE;
+    let boxex = boxcnt * BOX_LINE_UNIT_COST;
     let mut proj = vec![0.0, 0.0, 0.0];
     for y in 0..12 {
         let be = boxex;
-        let be = be / Pow::pow(1f64 + ENERGY_GRW_RATE as f64, y as f64);
-        let be = be * Pow::pow(1f64 + ECO_GRW_RATE as f64, y as f64);
-        //print!(" {}-{be:.2}", y + 2028);
+        let be = be / Pow::pow(1.0 + ENERGY_GRW_RATE, y);
+        let be = be * Pow::pow(1.0 + ECO_GRW_RATE, y);
         proj.push(be as f32);
     }
-    //println!();
     proj
 }
 
@@ -111,22 +111,22 @@ pub const WORKER_SOC_SEC_RATE: f32 = 0.05f32;
 pub const WORKER_REDUCE_RATE: f32 = 0.25f32;
 pub const SALARY_INCR_RATE: f32 = 0.04f32;
 
-pub fn ben_work_save(sbtr: &SubCalc) -> Vec<f32> {
-    let wk_cnt = (sbtr.mt_1_ph + sbtr.mt_3_ph) as f64 / METER_PER_WORKER as f64;
-    let mn_exp =
-        WORKER_MONTH_SALARY as f64 * (1.0 + WORKER_SAVING_RATE + WORKER_SOC_SEC_RATE) as f64;
-    let yr_exp = mn_exp * 12f64 + WORKER_MONTH_SALARY as f64 * WORKER_BONUS_MONTH as f64;
+pub fn ben_work_save(tras: &PeaAssVar) -> Vec<f32> {
+    let wk_cnt = tras.v[VarType::NoMet1Ph.tousz()].v + tras.v[VarType::NoMet3Ph.tousz()].v;
+    let wk_cnt = wk_cnt / METER_PER_WORKER;
+    let mn_exp = WORKER_MONTH_SALARY * (1.0 + WORKER_SAVING_RATE + WORKER_SOC_SEC_RATE);
+    let yr_exp = mn_exp * 12.0 + WORKER_MONTH_SALARY * WORKER_BONUS_MONTH;
     let yr_exp = yr_exp * wk_cnt;
     //print!(" mn:{mn_exp} yr:{yr_exp}");
-    let wk_redu = yr_exp * WORKER_REDUCE_RATE as f64;
+    let wk_redu = yr_exp * WORKER_REDUCE_RATE;
     //print!(" rd:{wk_redu}");
     let mut proj = vec![0.0, 0.0, 0.0];
     for y in 0..12 {
         let be = wk_redu;
-        let be = be / Pow::pow(1f64 + ENERGY_GRW_RATE as f64, y as f64);
-        let be = be * Pow::pow(1f64 + SALARY_INCR_RATE as f64, y as f64);
+        let be = be / Pow::pow(1.0 + ENERGY_GRW_RATE, y);
+        let be = be * Pow::pow(1.0 + SALARY_INCR_RATE, y);
         //print!(" {}-{be:.2}", y + 2028);
-        proj.push(be as f32);
+        proj.push(be);
     }
     proj
 }
@@ -135,24 +135,20 @@ pub const METER_SELLABLE_RATE: f32 = 0.33f32;
 pub const M3P_SELL_PRICE: f32 = 100f32;
 pub const M1P_SELL_PRICE: f32 = 50f32;
 
-pub fn ben_sell_meter(sbtr: &SubCalc) -> Vec<f32> {
+pub fn ben_sell_meter(tras: &PeaAssVar) -> Vec<f32> {
     //print!("====  SELL METER");
-    let m1p = sbtr.mt_1_ph as f64 * METER_SELLABLE_RATE as f64;
-    let m3p = sbtr.mt_3_ph as f64 * METER_SELLABLE_RATE as f64;
-    let m1p_s = m1p * M1P_SELL_PRICE as f64;
-    let m3p_s = m3p * M3P_SELL_PRICE as f64;
-    let m1p_y = m1p_s / 12f64;
-    let m3p_y = m3p_s / 12f64;
+    let m1p = tras.v[VarType::NoMet1Ph.tousz()].v * METER_SELLABLE_RATE;
+    let m3p = tras.v[VarType::NoMet1Ph.tousz()].v * METER_SELLABLE_RATE;
+    let m1p_s = m1p * M1P_SELL_PRICE;
+    let m3p_s = m3p * M3P_SELL_PRICE;
+    let m1p_y = m1p_s / 12.0;
+    let m3p_y = m3p_s / 12.0;
     //let mut proj = Vec::<(u32, f32)>::new();
     let mut proj = vec![0.0, 0.0, 0.0];
     for _y in 0..12 {
         let be = m1p_y + m3p_y;
-        //print!(" {}-{be:.2}", y + 2028);
-        //proj.push((y + 2028, be as f32));
-        proj.push(be as f32);
+        proj.push(be);
     }
-    //println!();
-    //BenProj { proj }
     proj
 }
 
@@ -166,45 +162,41 @@ pub const EMTR_3P_SWAP: f32 = 200f32;
 pub const EMTR_1P_REPL: f32 = 250f32;
 pub const EMTR_3P_REPL: f32 = 400f32;
 pub const EMTR_COST_UP: f32 = 0.02f32;
-pub fn ben_emeter(sbtr: &SubCalc) -> Vec<f32> {
+
+pub fn ben_emeter(tras: &PeaAssVar) -> Vec<f32> {
     //print!("====  EMETER");
-    let m1_cnt = sbtr.mt_1_ph as f64 * EMTR_CNT_RATIO as f64;
-    let m3_cnt = sbtr.mt_3_ph as f64 * EMTR_CNT_RATIO as f64;
-    let m1_sw_c = m1_cnt * EMTR_SWAP_RATE as f64;
-    let m3_sw_c = m3_cnt * EMTR_SWAP_RATE as f64;
-    let m1_sw_e = m1_sw_c * (EMTR_1P_COST + EMTR_1P_SWAP) as f64;
-    let m3_sw_e = m3_sw_c * (EMTR_3P_COST + EMTR_3P_SWAP) as f64;
-    let m1_rp_c = m1_cnt * EMTR_REPL_RATE as f64;
-    let m3_rp_c = m3_cnt * EMTR_REPL_RATE as f64;
-    let m1_rp_e = m1_rp_c * (EMTR_1P_COST + EMTR_1P_REPL) as f64;
-    let m3_rp_e = m3_rp_c * (EMTR_3P_COST + EMTR_3P_REPL) as f64;
+    let m1_cnt = tras.v[VarType::NoMet1Ph.tousz()].v * EMTR_CNT_RATIO;
+    let m3_cnt = tras.v[VarType::NoMet3Ph.tousz()].v * EMTR_CNT_RATIO;
+    let m1_sw_c = m1_cnt * EMTR_SWAP_RATE;
+    let m3_sw_c = m3_cnt * EMTR_SWAP_RATE;
+    let m1_sw_e = m1_sw_c * (EMTR_1P_COST + EMTR_1P_SWAP);
+    let m3_sw_e = m3_sw_c * (EMTR_3P_COST + EMTR_3P_SWAP);
+    let m1_rp_c = m1_cnt * EMTR_REPL_RATE;
+    let m3_rp_c = m3_cnt * EMTR_REPL_RATE;
+    let m1_rp_e = m1_rp_c * (EMTR_1P_COST + EMTR_1P_REPL);
+    let m3_rp_e = m3_rp_c * (EMTR_3P_COST + EMTR_3P_REPL);
     let ex = m1_sw_e + m3_sw_e + m1_rp_e + m3_rp_e;
-    //let mut proj = Vec::<(u32, f32)>::new();
     let mut proj = vec![0.0, 0.0, 0.0];
     for y in 0..12 {
         let be = ex;
-        let be = be * Pow::pow(1f64 + EMTR_COST_UP as f64, y as f64);
-        //print!(" {}-{be:.2}", y + 2028);
-        //proj.push((y + 2028, be as f32));
-        proj.push(be as f32);
+        let be = be * Pow::pow(1.0 + EMTR_COST_UP, y);
+        proj.push(be);
     }
-    //println!();
-    //BenProj { proj }
     proj
 }
 
 pub const MT_READ_COST: f32 = 6.2f32;
 pub const READ_COST_UP: f32 = 0.04f32;
 
-pub fn ben_mt_read(sbtr: &SubCalc) -> Vec<f32> {
+pub fn ben_mt_read(tras: &PeaAssVar) -> Vec<f32> {
     //print!("====  READING");
-    let m1_rd = sbtr.mt_1_ph as f64 * MT_READ_COST as f64 * 12f64;
-    let m3_rd = sbtr.mt_3_ph as f64 * MT_READ_COST as f64 * 12f64;
+    let m1_rd = tras.v[VarType::NoMet1Ph.tousz()].v * MT_READ_COST * 12.0;
+    let m3_rd = tras.v[VarType::NoMet3Ph.tousz()].v * MT_READ_COST * 12.0;
     let mut proj = vec![0.0, 0.0, 0.0];
     for y in 0..12 {
         let be = m1_rd + m3_rd;
-        let be = be * Pow::pow(1f64 + READ_COST_UP as f64, y as f64);
-        proj.push(be as f32);
+        let be = be * Pow::pow(1.0 + READ_COST_UP, y);
+        proj.push(be);
     }
     proj
 }
@@ -215,19 +207,18 @@ pub const M1_DISCON_RATE: f32 = 0.004f32;
 pub const M3_DISCON_RATE: f32 = 0.001f32;
 pub const DISCON_COST_UP: f32 = 0.04f32;
 
-pub fn ben_mt_disconn(sbtr: &SubCalc) -> Vec<f32> {
-    //print!("====  DISCON");
-    let m1_cn = sbtr.mt_1_ph as f64 * M1_DISCON_RATE as f64;
-    let m3_cn = sbtr.mt_3_ph as f64 * M3_DISCON_RATE as f64;
-    let m1_ex = m1_cn * M1_DISCON_COST as f64;
-    let m3_ex = m3_cn * M3_DISCON_COST as f64;
+pub fn ben_mt_disconn(tras: &PeaAssVar) -> Vec<f32> {
+    let m1_cn = tras.v[VarType::NoMet1Ph.tousz()].v * M1_DISCON_RATE;
+    let m3_cn = tras.v[VarType::NoMet3Ph.tousz()].v * M3_DISCON_RATE;
+    let m1_ex = m1_cn * M1_DISCON_COST;
+    let m3_ex = m3_cn * M3_DISCON_COST;
 
     let mut proj = vec![0.0, 0.0, 0.0];
     for y in 0..12 {
         let be = m1_ex + m3_ex;
-        let be = be * 200f64;
-        let be = be * Pow::pow(1f64 + DISCON_COST_UP as f64, y as f64);
-        proj.push(be as f32);
+        let be = be * 200.0;
+        let be = be * Pow::pow(1.0 + DISCON_COST_UP, y);
+        proj.push(be);
     }
     proj
 }
@@ -239,19 +230,18 @@ pub const TOU_SELLABLE_RATE: f32 = 0.20;
 pub const TOU_1P_SELL_PRICE: f32 = 350f32;
 pub const TOU_3P_SELL_PRICE: f32 = 857f32;
 
-pub fn ben_tou_sell(sbtr: &SubCalc) -> Vec<f32> {
+pub fn ben_tou_sell(tras: &PeaAssVar) -> Vec<f32> {
     //print!("====  SELL METER");
-    let m1p = sbtr.mt_1_ph as f64 * TOU_METER_RATIO as f64 * TOU_SELLABLE_RATE as f64;
-    let m3p = sbtr.mt_3_ph as f64 * TOU_METER_RATIO as f64 * TOU_SELLABLE_RATE as f64;
-    let m1p_s = m1p * TOU_1P_SELL_PRICE as f64;
-    let m3p_s = m3p * TOU_3P_SELL_PRICE as f64;
-    let m1p_y = m1p_s / 12f64;
-    let m3p_y = m3p_s / 12f64;
+    let m1p = tras.v[VarType::NoMet1Ph.tousz()].v * TOU_METER_RATIO * TOU_SELLABLE_RATE;
+    let m3p = tras.v[VarType::NoMet3Ph.tousz()].v * TOU_METER_RATIO * TOU_SELLABLE_RATE;
+    let m1p_s = m1p * TOU_1P_SELL_PRICE;
+    let m3p_s = m3p * TOU_3P_SELL_PRICE;
+    let m1p_y = m1p_s / 12.0;
+    let m3p_y = m3p_s / 12.0;
     let mut proj = vec![0.0, 0.0, 0.0];
     for _y in 0..12 {
         let be = m1p_y + m3p_y;
-        //print!(" {}-{be:.2}", y + 2028);
-        proj.push(be as f32);
+        proj.push(be);
     }
     proj
 }
@@ -260,35 +250,32 @@ pub fn ben_tou_sell(sbtr: &SubCalc) -> Vec<f32> {
 pub const TOU_READ_COST: f32 = 15f32;
 pub const TOU_COST_UP: f32 = 0.04f32;
 
-pub fn ben_tou_read(sbtr: &SubCalc) -> Vec<f32> {
-    //print!("====  TOU READ");
-    let m1p = sbtr.mt_1_ph as f64 * TOU_METER_RATIO as f64 * 12f64;
-    let m3p = sbtr.mt_3_ph as f64 * TOU_METER_RATIO as f64 * 12f64;
-    let m1_rd = m1p * TOU_READ_COST as f64;
-    let m3_rd = m3p * TOU_READ_COST as f64;
+pub fn ben_tou_read(tras: &PeaAssVar) -> Vec<f32> {
+    let m1p = tras.v[VarType::NoMet1Ph.tousz()].v * TOU_METER_RATIO * 12.0;
+    let m3p = tras.v[VarType::NoMet3Ph.tousz()].v * TOU_METER_RATIO * 12.0;
+    let m1_rd = m1p * TOU_READ_COST;
+    let m3_rd = m3p * TOU_READ_COST;
     let mut proj = vec![0.0, 0.0, 0.0];
     for y in 0..12 {
         let be = m1_rd + m3_rd;
-        let be = be * Pow::pow(1f64 + TOU_COST_UP as f64, y as f64);
-        proj.push(be as f32);
+        let be = be * Pow::pow(1.0 + TOU_COST_UP, y);
+        proj.push(be);
     }
     proj
 }
 
 pub const TOU_UPDATE_COST: f32 = 200f32;
 
-pub fn ben_tou_update(sbtr: &SubCalc) -> Vec<f32> {
-    //print!("====  TOU UPDATE");
-    let m1p = sbtr.mt_1_ph as f64 * TOU_METER_RATIO as f64;
-    let m3p = sbtr.mt_3_ph as f64 * TOU_METER_RATIO as f64;
-    let m1_rd = m1p * TOU_UPDATE_COST as f64;
-    let m3_rd = m3p * TOU_UPDATE_COST as f64;
+pub fn ben_tou_update(tras: &PeaAssVar) -> Vec<f32> {
+    let m1p = tras.v[VarType::NoMet1Ph.tousz()].v * TOU_METER_RATIO * 12.0;
+    let m3p = tras.v[VarType::NoMet3Ph.tousz()].v * TOU_METER_RATIO * 12.0;
+    let m1_rd = m1p * TOU_UPDATE_COST;
+    let m3_rd = m3p * TOU_UPDATE_COST;
     let mut proj = vec![0.0, 0.0, 0.0];
     for y in 0..12 {
         let be = m1_rd + m3_rd;
-        let be = be * Pow::pow(1f64 + TOU_COST_UP as f64, y as f64);
-        //print!(" {}-{be:.2}", y + 2028);
-        proj.push(be as f32);
+        let be = be * Pow::pow(1.0 + TOU_COST_UP, y);
+        proj.push(be);
     }
     proj
 }
@@ -296,15 +283,16 @@ pub fn ben_tou_update(sbtr: &SubCalc) -> Vec<f32> {
 pub const OUT_MT_HOUR_YEAR: f32 = 0.0011f32; // 125/116000
 pub const LABOR_COST_HOUR: f32 = 2_000f32;
 
-pub fn ben_outage_labor(sbtr: &SubCalc) -> Vec<f32> {
+pub fn ben_outage_labor(tras: &PeaAssVar) -> Vec<f32> {
     //print!("====  OUTAGE LABOR");
-    let hr = (sbtr.mt_1_ph + sbtr.mt_3_ph) as f64 * OUT_MT_HOUR_YEAR as f64;
-    let ex = hr * LABOR_COST_HOUR as f64 * 5f64;
+    let hr = tras.v[VarType::NoMet1Ph.tousz()].v + tras.v[VarType::NoMet3Ph.tousz()].v;
+    let hr = hr * OUT_MT_HOUR_YEAR;
+    let ex = hr * LABOR_COST_HOUR * 5.0;
     let mut proj = vec![0.0, 0.0, 0.0];
     for y in 0..12 {
         let be = ex;
-        let be = be * Pow::pow(1f64 + ECO_GRW_RATE as f64, y as f64);
-        proj.push(be as f32);
+        let be = be * Pow::pow(1.0 + ECO_GRW_RATE, y);
+        proj.push(be);
     }
     proj
 }
@@ -313,62 +301,46 @@ pub fn ben_outage_labor(sbtr: &SubCalc) -> Vec<f32> {
 pub const CALL_CENTER_COST_MT: f32 = 3.33f32;
 pub const CALL_CENTER_COST_UP: f32 = 0.04f32;
 
-pub fn ben_reduce_complain(sbtr: &SubCalc) -> Vec<f32> {
-    //print!("====  COMPLAIN");
-    let ex = (sbtr.mt_1_ph + sbtr.mt_3_ph) as f64 * CALL_CENTER_COST_MT as f64;
+pub fn ben_reduce_complain(tras: &PeaAssVar) -> Vec<f32> {
+    let hr = tras.v[VarType::NoMet1Ph.tousz()].v + tras.v[VarType::NoMet3Ph.tousz()].v;
+    let ex = hr * CALL_CENTER_COST_MT;
     let mut proj = vec![0.0, 0.0, 0.0];
     for y in 0..12 {
         let be = ex;
-        let be = be * Pow::pow(1f64 + CALL_CENTER_COST_UP as f64, y as f64);
-        proj.push(be as f32);
+        let be = be * Pow::pow(1.0 + CALL_CENTER_COST_UP, y);
+        proj.push(be);
     }
     proj
 }
 
 //FirAssetValue
-pub fn ben_asset_value(sbtr: &SubCalc) -> Vec<f32> {
-    let m1i = sbtr.mt_1_ph as f64 * M1P_COST as f64;
-    let m3i = sbtr.mt_3_ph as f64 * M3P_COST as f64;
-    let txp = sbtr.p_tx_cn_m.iter().map(|(_, v)| v).sum::<u32>();
-    let txc = sbtr.c_tx_cn_m.iter().map(|(_, v)| v).sum::<u32>();
-    let txi = (txp + txc) as f64 * TRX_COST as f64;
-    let esi = 0f64;
-    /*
-    let mut esi = 0f64;
-    if ben.mx_pw > 0f32 && ben.grw < 7f32 && ben.be_start <= 3 && ben.trlm > 40f32 {
-        esi = ben.bat_cost as f64 * 1_000_000_f64;
-    }
-    */
-    let ass = (m1i + m3i + txi + esi) * ASSET_WORTH_RATIO as f64;
-    //print!("  m1:{m1i} m3:{m3i} t:{txi} b:{esi} = as:{ass}\n");
+pub fn ben_asset_value(tras: &PeaAssVar) -> Vec<f32> {
+    let m1i = tras.v[VarType::NoMet1Ph.tousz()].v * M1P_COST;
+    let m3i = tras.v[VarType::NoMet3Ph.tousz()].v * M3P_COST;
+    let txi = tras.v[VarType::NoPeaTr.tousz()].v * TRX_COST;
+    let esi = 0f32;
+    let ass = (m1i + m3i + txi + esi) * ASSET_WORTH_RATIO;
     let mut proj = vec![0.0, 0.0, 0.0];
     for _y in 0..11 {
         proj.push(0f32);
     }
-    proj.push(ass as f32);
+    proj.push(ass);
     proj
 }
 
-pub fn ben_model_entry(sbtr: &SubCalc) -> Vec<f32> {
-    //print!("====  MODEL ENTRY");
-    let txp = sbtr.p_tx_cn_m.iter().map(|(_, v)| v).sum::<u32>();
-    let txc = sbtr.c_tx_cn_m.iter().map(|(_, v)| v).sum::<u32>();
-    let cnt = (txp + txc + sbtr.mt_1_ph as u32 + sbtr.mt_3_ph as u32) as f64;
-    /*
-    let mut cnt = (txp + txc + sbtr.mt_1_ph as u32 + sbtr.mt_3_ph as u32) as f64;
-    if ben.mx_pw > 0f32 && ben.grw < 7f32 && ben.be_start <= 3 && ben.trlm > 40f32 {
-        cnt += 1.0;
-    }
-    */
-    let ent_cn = cnt * MODEL_ENTRY_RATIO as f64;
-    let ent_ex = ent_cn * MODEL_ENTRY_COST as f64;
+pub fn ben_model_entry(tras: &PeaAssVar) -> Vec<f32> {
+    let m1i = tras.v[VarType::NoMet1Ph.tousz()].v;
+    let m3i = tras.v[VarType::NoMet3Ph.tousz()].v;
+    let txi = tras.v[VarType::NoPeaTr.tousz()].v;
+    let cnt = m1i + m3i + txi;
+    let ent_cn = cnt * MODEL_ENTRY_RATIO;
+    let ent_ex = ent_cn * MODEL_ENTRY_COST;
 
     let mut proj = vec![0.0, 0.0, 0.0];
     for y in 0..12 {
         let be = ent_ex;
-        let be = be * Pow::pow(1f64 + CALL_CENTER_COST_UP as f64, y as f64);
-        //print!(" {} - {be}", y + 2028);
-        proj.push(be as f32);
+        let be = be * Pow::pow(1.0 + CALL_CENTER_COST_UP, y);
+        proj.push(be);
     }
     proj
 }
@@ -388,55 +360,20 @@ use sglib03::prc4::BC_TR_CRIT_LIM;
 use sglib03::prc4::BC_TR_LOAD_LIM;
 
 pub fn ben_bess_calc(
-    _sbtr: &SubCalc,
     sb: &PeaSub,
-    gr: f32,
-    pwx: f32,
+    sbas: &PeaAssVar,
 ) -> (Vec<f32>, Vec<f32>, Vec<f32>, Vec<f32>, f32) {
-    let mut sub_save = vec![0.0, 0.0, 0.0];
-    let mut svg_save = vec![0.0, 0.0, 0.0];
-    let mut dif_save = vec![0.0, 0.0, 0.0];
-    let mut eng_save = vec![0.0, 0.0, 0.0];
-    //let ben = ld_ben_bess1(&sbas.sbid);
-
+    let mut sub_save = Vec::<f32>::new();
+    let mut svg_save = Vec::<f32>::new();
+    let mut dif_save = Vec::<f32>::new();
+    let mut eng_save = Vec::<f32>::new();
     // ==============================================
     // ==============================================
     // ======= BEGIN =======
-    // BENEFIT
-    /*
-    println!(
-        "cate:{} state:{} conf:{} sbtp:{}",
-        sb.cate, sb.state, sb.conf, sb.sbtp
-    );
-    */
-
-    let grw = gr;
-    let pwmx = pwx;
-
-    /*
-    let mut grw = 100f32 * ENERGY_GRW_RATE;
-    let mut pwmx = 0f32;
-    if let Some(reps) = &sb.lp_rep_24.pos_rep.val {
-        for vv in reps.iter().flatten() {
-            pwmx = pwmx.max(*vv);
-        }
-    };
-    let mut pwmx0 = 0f32;
-    if let Some(reps) = &sb.lp_rep_23.pos_rep.val {
-        for vv in reps.iter().flatten() {
-            pwmx0 = pwmx0.max(*vv);
-        }
-    };
-
-    let grw2 = if pwmx0 > 0f32 {
-        (pwmx - pwmx0) / pwmx * 100f32
-    } else {
-        0f32
-    };
-    if grw2 > grw && grw2 < 6f32 {
-        grw = grw2;
-    }
-    */
+    //let grw = gr;
+    //let pwmx = pwx;
+    let grw = sbas.v[VarType::EnGrowth.tousz()].v;
+    let pwmx = sbas.v[VarType::MaxPosPowSub.tousz()].v;
 
     let trlm = sb.mvxn as f32 * BC_POWER_FACT * BC_TR_LOAD_LIM;
     let trcr = sb.mvxn as f32 * BC_POWER_FACT * BC_TR_CRIT_LIM;
@@ -444,8 +381,24 @@ pub fn ben_bess_calc(
     let yrno = (trlm - pwmx) / dppy;
     let yrno = yrno as usize;
     let mut ls_ex_en = 0f32;
+    let sola = sbas.v[VarType::SolarEnergy.tousz()].v;
+    let sort = sola / trlm;
 
-    if sb.sbtp == "AIS" && yrno < 6 {
+    pub const BESS_YEAR_TO_FULL: f32 = 20.0;
+    pub const BESS_SOLA_RATIO: f32 = 0.5;
+    //println!("   >>>>>> SOLAR ENERGY {sola}");
+
+    if sola > 0f32 {
+        println!(
+            "BEN_BESS 1 >>>> {sola} ==== sbtp:{} sort:{sort} yrno:{yrno}",
+            sb.sbtp
+        );
+    }
+
+    //if sb.sbtp == "AIS" && yrno < BESS_YEAR_TO_FULL as usize && sort > BESS_SOLA_RATIO {
+    if sb.sbtp == "AIS" && sort > BESS_SOLA_RATIO && yrno < BESS_YEAR_TO_FULL as usize {
+        println!("BEN_BESS 2 >>>>>>> {sola} =============");
+
         // day load profile
         let daylp = if let Some(reps) = &sb.lp_rep_24.pos_rep.val {
             reps.iter().flatten().cloned().collect::<Vec<_>>()

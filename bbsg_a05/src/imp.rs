@@ -237,6 +237,16 @@ impl AssVar {
     }
 }
 
+impl Geo for u64 {
+    fn n1d_2_utm(&self) -> (f32, f32) {
+        sglib04::geo1::n1d_2_utm(*self)
+    }
+    fn n1d_2_latlon(&self) -> (f32, f32) {
+        let (x, y) = sglib04::geo1::n1d_2_utm(*self);
+        sglab02_lib::sg::mvline::utm_latlong(x, y)
+    }
+}
+
 impl Pan for f32 {
     fn san(v: &str) -> String {
         v.as_bytes()

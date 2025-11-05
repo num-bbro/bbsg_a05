@@ -21,6 +21,9 @@ pub mod sbb10;
 pub mod sbb11;
 pub mod sbb12;
 pub mod sbb13;
+// tra
+pub mod tra01;
+// fda
 
 pub const SBB_MENU: [(&str, &str, &str); 13] = [
     (

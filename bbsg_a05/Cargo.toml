@@ -1,6 +1,6 @@
 [package]
 name = "bbsg_a05"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 authors = ["num-bbro <num@bbro.jp>"]
 description = "bbsg_a05"
@@ -34,6 +34,7 @@ askama_web = { version = "0.14.5", features = ["axum-0.8"] }
 axum = "0.8.4"
 tokio = { version = "1.47.0", features = ["full"] }
 financial = "1.1.5"
+calamine = "0.31.0"
 
 [features]
 dcl = []

@@ -635,7 +635,8 @@ pub fn p08_class_val(lpv: &[Option<f32>; DAY_VAL_PNTS]) -> Result<ProfInfo, Box<
             }
         }
     }
-    let nc: Vec<_> = lpr.iter().flatten().map(|v| *v).collect();
+    //let nc: Vec<_> = lpr.iter().flatten().map(|v| *v).collect();
+    let nc: Vec<_> = lpr.iter().flatten().copied().collect();
     //let mx = lpr.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
     //println!(" x:{mx:?}");
     if nc.len() == lpr.len() {
@@ -795,6 +796,7 @@ pub fn p08_class_val(lpv: &[Option<f32>; DAY_VAL_PNTS]) -> Result<ProfInfo, Box<
             let pk = -*pk;
             sol_pk = Some(pk);
             let en: f32 = so.iter().sum();
+            let en = en * (24.0 / DAY_VAL_PNTS as f32);
             sol_en = Some(en);
             solar = Some(so);
         }

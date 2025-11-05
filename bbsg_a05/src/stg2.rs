@@ -5,7 +5,7 @@ use crate::p08::ProfType;
 use crate::utl::mon_kwh_2_kw;
 use crate::utl::trf_kva_2_kw;
 use crate::utl::*;
-use iterstats::Iterstats;
+//use iterstats::Iterstats;
 use regex::Regex;
 use sglib04::geo4::PowerProdType;
 use std::collections::HashMap;
@@ -29,6 +29,33 @@ pub const EB_CHG_POW_KW: f32 = 0.1f32;
 pub const EB_DAY_CHG_HOUR: f32 = 3.0;
 pub const EB_CLAIM_RATE: f32 = 1.0;
 
+use crate::cst2::cst_bes_imp;
+use crate::cst2::cst_bes_ins;
+use crate::cst2::cst_bes_op;
+use crate::cst2::cst_comm_imp;
+use crate::cst2::cst_comm_ins;
+use crate::cst2::cst_comm_op;
+use crate::cst2::cst_m1p_imp;
+use crate::cst2::cst_m1p_ins;
+use crate::cst2::cst_m1p_op;
+use crate::cst2::cst_m3p_imp;
+use crate::cst2::cst_m3p_ins;
+use crate::cst2::cst_m3p_op;
+use crate::cst2::cst_plfm_imp;
+use crate::cst2::cst_plfm_ins;
+use crate::cst2::cst_plfm_op;
+use crate::cst2::cst_tr_imp;
+use crate::cst2::cst_tr_ins;
+use crate::cst2::cst_tr_op;
+use crate::cst2::eir_cust_etruck_save;
+use crate::cst2::eir_cust_ev_save;
+use crate::cst2::eir_cust_loss_save;
+use crate::cst2::eir_cust_mv_rev;
+use crate::cst2::eir_cust_save;
+use crate::cst2::eir_cust_solar_roof;
+use crate::cst2::eir_en_rev_save;
+use crate::cst2::eir_ghg_save;
+
 /// read 000_pea.bin
 /// read SSS.bin
 /// write
@@ -45,9 +72,10 @@ pub fn stage_02() -> Result<(), Box<dyn Error>> {
     let mut tras_mx1 = PeaAssVar::from(0u64);
     let mut tras_mx2 = PeaAssVar::from(0u64);
     let mut tras_sm2 = PeaAssVar::from(0u64);
-    chk_02_1(&aids, &pea, DNM, &mut tras_mx1)?;
-    chk_02_2(&aids, &pea, DNM, &tras_mx1, &mut tras_mx2, &mut tras_sm2)?;
-    chk_02_3(&aids, &pea, DNM, &tras_mx2, &tras_sm2)?;
+    stage_02_1(&aids, &pea, DNM, &mut tras_mx1)?;
+    stage_02_2(&aids, &pea, DNM, &tras_mx1, &mut tras_mx2, &mut tras_sm2)?;
+    stage_02_3(&aids, &pea, DNM, &tras_mx2, &tras_sm2)?;
+    stage_02_4(&aids, &pea, DNM)?;
     let maxs = vec![tras_mx1, tras_mx2, tras_sm2];
     let bin: Vec<u8> = bincode::encode_to_vec(&maxs, bincode::config::standard()).unwrap();
     std::fs::write(format!("{DNM}/pea-mx.bin"), bin).unwrap();
@@ -55,97 +83,24 @@ pub fn stage_02() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn c04_chk_lp_01() -> Result<(), Box<dyn Error>> {
-    //let dnm = "/mnt/e/CHMBACK/pea-data/c01_pea";
+pub fn stage_02_a() -> Result<(), Box<dyn Error>> {
+    println!("===== STAGE 2A =====");
     let buf = std::fs::read(format!("{DNM}/000_pea.bin")).unwrap();
     let (pea, _): (Pea, usize) =
         bincode::decode_from_slice(&buf[..], bincode::config::standard()).unwrap();
-    println!("pea ar:{}", pea.aream.len());
     let mut aids: Vec<_> = pea.aream.keys().collect();
     aids.sort();
-    let e0 = ProcEngine::prep5();
-    let keys: Vec<_> = e0.lp24.keys().collect();
-    let re = Regex::new(r"([A-Z]{3})-([0-9]{2})[VW].*").unwrap();
-    let mut fd2fd = HashMap::<String, String>::new();
-    for k in keys {
-        for cap in re.captures_iter(k) {
-            let a = &cap[1].to_string();
-            let b = &cap[2].to_string();
-            let fd = format!("{a}{b}");
-            if let Some(o) = fd2fd.get(&fd) {
-                println!("DUP {o} => fd:{fd} k:{k}");
-            } else {
-                fd2fd.insert(fd, k.to_string());
-            }
-        }
-    }
-    for id in aids {
-        let aid = id.to_string();
-        let Some(ar) = pea.aream.get(&aid) else {
-            continue;
-        };
-        println!("ar:{}", ar.arid);
-        let mut pids: Vec<_> = ar.provm.keys().collect();
-        pids.sort();
-        // province loop1
-        for pid in pids {
-            let Some(prov) = ar.provm.get(pid) else {
-                continue;
-            };
-            println!("  pv:{pid}");
-            let mut sids: Vec<_> = prov.subm.keys().collect();
-            sids.sort();
-            for sid in sids {
-                let Some(_sb) = prov.subm.get(sid) else {
-                    continue;
-                };
-                /*
-                let Ok(buf) = std::fs::read(format!("{dnm}/{sid}.bin")) else {
-                    continue;
-                };
-                */
-                //let (sub, _): (PeaSub, usize) =
-                //    bincode::decode_from_slice(&buf[..], bincode::config::standard()).unwrap();
-
-                if let Some(lp) = e0.lp24.get(sid)
-                    && let Some(v) = lp.pos_rep.val
-                {
-                    //let g = v.into_iter().filter_map(|t| t).collect::<Vec<_>>();
-                    let g = v.into_iter().flatten().collect::<Vec<_>>();
-                    let m = g.iter().mean();
-                    let s = g.iter().stddev();
-                    let x = g
-                        .iter()
-                        .filter(|v| {
-                            let z = (*v - m) / s;
-                            z > 2.5f32
-                        })
-                        //.map(|&v| v)
-                        .collect::<Vec<_>>();
-                    if let (Some(a), Some(n)) = (
-                        x.clone()
-                            .into_iter()
-                            .max_by(|x, y| x.partial_cmp(y).unwrap()),
-                        x.clone()
-                            .into_iter()
-                            .min_by(|x, y| x.partial_cmp(y).unwrap()),
-                    ) {
-                        let c = x.len();
-                        println!("      sub: 24p {sid} z:{a}-{n} c:{c} m:{m} s:{s}");
-                    }
-                }
-            }
-        }
-    }
+    stage_02_4(&aids, &pea, DNM)?;
     Ok(())
 }
 
-pub fn chk_02_1(
+pub fn stage_02_1(
     aids: &Vec<&String>,
     pea: &Pea,
     dnm: &str,
     tras_mx1: &mut PeaAssVar,
 ) -> Result<(), Box<dyn Error>> {
+    // ----- ProcEngine
     let e0 = ProcEngine::prep5();
     let keys: Vec<_> = e0.lp24.keys().collect();
     let re = Regex::new(r"([A-Z]{3})-([0-9]{2})[VW].*").unwrap();
@@ -173,8 +128,8 @@ pub fn chk_02_1(
         println!("ar:{}", ar.arid);
         let eg = ProcEngine::prep3(id);
 
+        //--- amphor initialization
         let mut am_dn = HashMap::<String, (f32, f32)>::new();
-        let mut mu_dn = HashMap::<String, (f32, f32)>::new();
         for dn in &eg.amps {
             let key = dn.key.to_string();
             if let Some((_po, aa)) = am_dn.get_mut(&key) {
@@ -183,6 +138,9 @@ pub fn chk_02_1(
                 am_dn.insert(key, (dn.popu, dn.area));
             }
         }
+
+        //--- municipality initialization
+        let mut mu_dn = HashMap::<String, (f32, f32)>::new();
         for dn in &eg.muni {
             let key = dn.key.to_string();
             if let Some((_po, aa)) = mu_dn.get_mut(&key) {
@@ -208,9 +166,12 @@ pub fn chk_02_1(
             let mut sids: Vec<_> = prov.subm.keys().collect();
             sids.sort();
             for sid in sids {
+                // check if the substation exists
                 let Some(_sb) = prov.subm.get(sid) else {
                     continue;
                 };
+
+                // read substation data from storage
                 let Ok(buf) = std::fs::read(format!("{dnm}/{sid}.bin")) else {
                     continue;
                 };
@@ -224,16 +185,16 @@ pub fn chk_02_1(
                 println!("{sbx:?}");
                 */
 
+                //let mut level = HashMap::<String, String>::new();
                 /*
                 let mut aoj_sz = HashMap::<String, String>::new();
-                let mut level = HashMap::<String, String>::new();
-                for aoj in &sb.aojv {
+                for aoj in &sub.aojv {
                     aoj_sz
                         .entry(aoj.aoj_sz.clone())
                         .or_insert_with(|| aoj.aoj_sz.clone());
                 }
-                println!("aoj_sz {sid} {aoj_sz:?} : {}", sb.aojv.len());
-                */
+                println!("aoj_sz {sid} {aoj_sz:?} : {}", sub.aojv.len());
+                 */
 
                 //println!("      feed: {}", sub.feeders.len());
 
@@ -268,7 +229,7 @@ pub fn chk_02_1(
                     && let Ok(lpf) = p08_class_val(lp)
                     && (lpf.lp_type == ProfType::SolarPower || lpf.lp_type == ProfType::SolarNight)
                 {
-                    solar = lpf.sol_en.unwrap_or(0f32);
+                    solar = -lpf.sol_en.unwrap_or(0f32);
                 }
                 // LP23 - Phase
                 ////////////////////////////
@@ -309,7 +270,8 @@ pub fn chk_02_1(
                     ////////////////////////////////////////////////////////
                     // Feeder
                     let (mut af01, mut af03, mut af02, mut af04) = (None, None, None, None);
-                    let k1 = format!("{fid}");
+                    //let k1 = format!("{fid}");
+                    let k1 = fid.to_string();
                     let key = fd2fd.get(&k1).unwrap_or(&"-".to_string()).to_string();
 
                     let mut grw = EN_AVG_GRW_RATE;
@@ -405,6 +367,9 @@ pub fn chk_02_1(
 
                     let mut tids: Vec<_> = fd.tranm.keys().collect();
                     tids.sort();
+
+                    // =========================
+                    // loop on each transformer
                     for tid in tids {
                         let Some(trn) = fd.tranm.get(tid) else {
                             continue;
@@ -451,6 +416,9 @@ pub fn chk_02_1(
 
                         let (mut se_a, mut se_b, mut se_c) = (0.0, 0.0, 0.0);
                         let (mut sl_a, mut sl_b, mut sl_c, mut sl_3) = (0.0, 0.0, 0.0, 0.0);
+                        //
+                        // =========================
+                        // loop on each meter
                         for met in &trn.mets {
                             ///////////////////////////////////////////////////
                             ///////////////////////////////////////////////////
@@ -571,6 +539,7 @@ pub fn chk_02_1(
                             }
                         }
 
+                        // transformer data finish
                         let mut tr_as = PeaAssVar::from(trn.n1d);
                         tr_as.arid = aid.to_string();
                         tr_as.pvid = pid.to_string();
@@ -648,7 +617,7 @@ pub fn chk_02_1(
     Ok(())
 }
 
-pub fn chk_02_2(
+pub fn stage_02_2(
     aids: &Vec<&String>,
     pea: &Pea,
     dnm: &str,
@@ -829,7 +798,7 @@ pub fn chk_02_2(
     Ok(())
 }
 
-pub fn chk_02_3(
+pub fn stage_02_3(
     aids: &Vec<&String>,
     pea: &Pea,
     dnm: &str,
@@ -853,6 +822,7 @@ pub fn chk_02_3(
     let etsc = et_scurv();
     let ebsc = eb_scurv();
     println!("evsc: {} resc: {}", evsc.len(), resc.len());
+    // loop of areas
     for id in aids {
         let aid = id.to_string();
         let Some(ar) = pea.aream.get(&aid) else {
@@ -1014,5 +984,240 @@ pub fn chk_02_3(
             }
         }
     }
+    Ok(())
+}
+
+use crate::stg3::ass_calc;
+
+pub fn stage_02_4(aids: &Vec<&String>, pea: &Pea, dnm: &str) -> Result<(), Box<dyn Error>> {
+    // loop of areas
+    let mut cn = 0;
+    let mut sm = 0f32;
+    for id in aids {
+        let aid = id.to_string();
+        let Some(ar) = pea.aream.get(&aid) else {
+            continue;
+        };
+        println!("ar:{}", ar.arid);
+        let mut pids: Vec<_> = ar.provm.keys().collect();
+        pids.sort();
+        for pid in pids {
+            let Some(prov) = ar.provm.get(pid) else {
+                continue;
+            };
+            println!("  pv:{pid}");
+            let mut sids: Vec<_> = prov.subm.keys().collect();
+            sids.sort();
+            for sid in sids {
+                let Some(_sb) = prov.subm.get(sid) else {
+                    continue;
+                };
+
+                ////////////////////////////////////////////////
+                // read raw data 3
+                let Ok(buf) = std::fs::read(format!("{dnm}/{sid}-rw3.bin")) else {
+                    continue;
+                };
+                let (mut v_tras_raw, _): (Vec<PeaAssVar>, usize) =
+                    bincode::decode_from_slice(&buf[..], bincode::config::standard()).unwrap();
+                println!("   {sid} - {}", v_tras_raw.len());
+                ///////////////////////////////////////////////
+                // calculate ratio with the whole
+                for tras in v_tras_raw.iter_mut() {
+                    cn += 1;
+
+                    let ary = crate::ben2::ben_bill_accu(tras);
+                    tras.vy[VarType::FirBilAccu.tousz()].append(&mut ary.clone());
+                    tras.v[VarType::FirBilAccu.tousz()].v = ary.iter().sum();
+                    sm += ary.iter().sum::<f32>();
+
+                    let csh = crate::ben2::ben_cash_flow(tras);
+                    tras.vy[VarType::FirCashFlow.tousz()].append(&mut csh.clone());
+                    tras.v[VarType::FirCashFlow.tousz()].v = csh.iter().sum();
+
+                    let drs = crate::ben2::ben_dr_save(tras);
+                    tras.vy[VarType::FirDRSave.tousz()].append(&mut drs.clone());
+                    tras.v[VarType::FirDRSave.tousz()].v = drs.iter().sum();
+
+                    let bxc = crate::ben2::ben_boxline_save(tras);
+                    tras.vy[VarType::FirMetBoxSave.tousz()].append(&mut bxc.clone());
+                    tras.v[VarType::FirMetBoxSave.tousz()].v = bxc.iter().sum();
+
+                    let wks = crate::ben2::ben_work_save(tras);
+                    tras.vy[VarType::FirLaborSave.tousz()].append(&mut wks.clone());
+                    tras.v[VarType::FirLaborSave.tousz()].v = wks.iter().sum();
+
+                    let mts = crate::ben2::ben_sell_meter(tras);
+                    tras.vy[VarType::FirMetSell.tousz()].append(&mut mts.clone());
+                    tras.v[VarType::FirMetSell.tousz()].v = mts.iter().sum();
+
+                    let ems = crate::ben2::ben_emeter(tras);
+                    tras.vy[VarType::FirEMetSave.tousz()].append(&mut ems.clone());
+                    tras.v[VarType::FirEMetSave.tousz()].v = ems.iter().sum();
+
+                    let mrs = crate::ben2::ben_mt_read(tras);
+                    tras.vy[VarType::FirMetReadSave.tousz()].append(&mut mrs.clone());
+                    tras.v[VarType::FirMetReadSave.tousz()].v = mrs.iter().sum();
+
+                    let mds = crate::ben2::ben_mt_disconn(tras);
+                    tras.vy[VarType::FirMetDisSave.tousz()].append(&mut mds.clone());
+                    tras.v[VarType::FirMetDisSave.tousz()].v = mds.iter().sum();
+
+                    let tos = crate::ben2::ben_tou_sell(tras);
+                    tras.vy[VarType::FirTouSell.tousz()].append(&mut tos.clone());
+                    tras.v[VarType::FirTouSell.tousz()].v = tos.iter().sum();
+
+                    let trs = crate::ben2::ben_tou_read(tras);
+                    tras.vy[VarType::FirTouReadSave.tousz()].append(&mut trs.clone());
+                    tras.v[VarType::FirTouReadSave.tousz()].v = trs.iter().sum();
+
+                    let tus = crate::ben2::ben_tou_update(tras);
+                    tras.vy[VarType::FirTouUpdateSave.tousz()].append(&mut tus.clone());
+                    tras.v[VarType::FirTouUpdateSave.tousz()].v = tus.iter().sum();
+
+                    let ols = crate::ben2::ben_outage_labor(tras);
+                    tras.vy[VarType::FirOutLabSave.tousz()].append(&mut ols.clone());
+                    tras.v[VarType::FirOutLabSave.tousz()].v = ols.iter().sum();
+
+                    let cps = crate::ben2::ben_reduce_complain(tras);
+                    tras.vy[VarType::FirComplainSave.tousz()].append(&mut cps.clone());
+                    tras.v[VarType::FirComplainSave.tousz()].v = cps.iter().sum();
+
+                    let asv = crate::ben2::ben_asset_value(tras);
+                    tras.vy[VarType::FirAssetValue.tousz()].append(&mut asv.clone());
+                    tras.v[VarType::FirAssetValue.tousz()].v = asv.iter().sum();
+
+                    let mes = crate::ben2::ben_model_entry(tras);
+                    tras.vy[VarType::FirDataEntrySave.tousz()].append(&mut mes.clone());
+                    tras.v[VarType::FirDataEntrySave.tousz()].v = mes.iter().sum();
+
+                    let dum = vec![0f32; 15];
+                    tras.vy[VarType::FirBatSubSave.tousz()].append(&mut dum.clone());
+                    tras.vy[VarType::FirBatSvgSave.tousz()].append(&mut dum.clone());
+                    tras.vy[VarType::FirBatEnerSave.tousz()].append(&mut dum.clone());
+                    tras.vy[VarType::FirBatPriceDiff.tousz()].append(&mut dum.clone());
+
+                    let nome1 = tras.v[VarType::NoMet1Ph.tousz()].v;
+                    let nome3 = tras.v[VarType::NoMet3Ph.tousz()].v;
+                    let notr = tras.v[VarType::NoPeaTr.tousz()].v;
+                    let nobess = 0.0;
+                    let bescap = 0.0;
+                    let nodev = nome1 + nome3 + notr + nobess;
+
+                    tras.v[VarType::NoDevice.tousz()].v = nodev;
+                    tras.vy[VarType::CstMet1pIns.tousz()].append(&mut cst_m1p_ins(nome1));
+                    tras.vy[VarType::CstMet3pIns.tousz()].append(&mut cst_m3p_ins(nome3));
+                    tras.vy[VarType::CstTrIns.tousz()].append(&mut cst_tr_ins(notr));
+                    tras.vy[VarType::CstBessIns.tousz()].append(&mut cst_bes_ins(bescap));
+                    tras.vy[VarType::CstPlfmIns.tousz()].append(&mut cst_plfm_ins(nodev));
+                    tras.vy[VarType::CstCommIns.tousz()].append(&mut cst_comm_ins(nodev));
+
+                    tras.vy[VarType::CstMet1pImp.tousz()].append(&mut cst_m1p_imp(nome1));
+                    tras.vy[VarType::CstMet3pImp.tousz()].append(&mut cst_m3p_imp(nome3));
+                    tras.vy[VarType::CstTrImp.tousz()].append(&mut cst_tr_imp(notr));
+                    tras.vy[VarType::CstBessImp.tousz()].append(&mut cst_bes_imp(bescap));
+                    tras.vy[VarType::CstPlfmImp.tousz()].append(&mut cst_plfm_imp(nodev));
+                    tras.vy[VarType::CstCommImp.tousz()].append(&mut cst_comm_imp(nodev));
+
+                    tras.vy[VarType::CstMet1pOp.tousz()].append(&mut cst_m1p_op(nome1));
+                    tras.vy[VarType::CstMet3pOp.tousz()].append(&mut cst_m3p_op(nome3));
+                    tras.vy[VarType::CstTrOp.tousz()].append(&mut cst_tr_op(notr));
+                    tras.vy[VarType::CstBessOp.tousz()].append(&mut cst_bes_op(bescap));
+                    tras.vy[VarType::CstPlfmOp.tousz()].append(&mut cst_plfm_op(nodev));
+                    tras.vy[VarType::CstCommOp.tousz()].append(&mut cst_comm_op(nodev));
+
+                    let sel = tras.v[VarType::AllSellTr.tousz()].v;
+
+                    tras.vy[VarType::EirCustLossSave.tousz()].append(&mut eir_cust_loss_save(sel));
+                    tras.vy[VarType::EirConsumSave.tousz()].append(&mut eir_cust_save(sel));
+                    tras.vy[VarType::EirGrnHsEmsSave.tousz()].append(&mut eir_ghg_save(sel));
+                    tras.vy[VarType::EirCustMvRev.tousz()].append(&mut eir_cust_mv_rev(sel));
+                    tras.vy[VarType::EirCustEvSave.tousz()].append(&mut eir_cust_ev_save(sel));
+                    tras.vy[VarType::EirCustEtrkSave.tousz()]
+                        .append(&mut eir_cust_etruck_save(sel));
+                    tras.vy[VarType::EirSolaRfTopSave.tousz()]
+                        .append(&mut eir_cust_solar_roof(sel));
+                    tras.vy[VarType::EirEnerResvSave.tousz()].append(&mut eir_en_rev_save(sel));
+
+                    tras.v[VarType::CstMet1pIns.tousz()].v =
+                        tras.vy[VarType::CstMet1pIns.tousz()].iter().sum();
+
+                    tras.v[VarType::CstMet1pIns.tousz()].v =
+                        tras.vy[VarType::CstMet1pIns.tousz()].iter().sum();
+
+                    tras.v[VarType::CstMet1pIns.tousz()].v =
+                        tras.vy[VarType::CstMet1pIns.tousz()].iter().sum();
+
+                    tras.v[VarType::CstMet1pIns.tousz()].v =
+                        tras.vy[VarType::CstMet1pIns.tousz()].iter().sum();
+
+                    tras.v[VarType::CstMet1pIns.tousz()].v =
+                        tras.vy[VarType::CstMet1pIns.tousz()].iter().sum();
+
+                    tras.v[VarType::CstMet1pIns.tousz()].v =
+                        tras.vy[VarType::CstMet1pIns.tousz()].iter().sum();
+                    tras.v[VarType::CstMet3pIns.tousz()].v =
+                        tras.vy[VarType::CstMet3pIns.tousz()].iter().sum();
+                    tras.v[VarType::CstTrIns.tousz()].v =
+                        tras.vy[VarType::CstTrIns.tousz()].iter().sum();
+                    tras.v[VarType::CstBessIns.tousz()].v =
+                        tras.vy[VarType::CstBessIns.tousz()].iter().sum();
+                    tras.v[VarType::CstPlfmIns.tousz()].v =
+                        tras.vy[VarType::CstPlfmIns.tousz()].iter().sum();
+                    tras.v[VarType::CstCommIns.tousz()].v =
+                        tras.vy[VarType::CstCommIns.tousz()].iter().sum();
+
+                    tras.v[VarType::CstMet1pImp.tousz()].v =
+                        tras.vy[VarType::CstMet1pImp.tousz()].iter().sum();
+                    tras.v[VarType::CstMet3pImp.tousz()].v =
+                        tras.vy[VarType::CstMet3pImp.tousz()].iter().sum();
+                    tras.v[VarType::CstTrImp.tousz()].v =
+                        tras.vy[VarType::CstTrImp.tousz()].iter().sum();
+                    tras.v[VarType::CstBessImp.tousz()].v =
+                        tras.vy[VarType::CstBessImp.tousz()].iter().sum();
+                    tras.v[VarType::CstPlfmImp.tousz()].v =
+                        tras.vy[VarType::CstPlfmImp.tousz()].iter().sum();
+                    tras.v[VarType::CstCommImp.tousz()].v =
+                        tras.vy[VarType::CstCommImp.tousz()].iter().sum();
+
+                    tras.v[VarType::CstMet1pOp.tousz()].v =
+                        tras.vy[VarType::CstMet1pOp.tousz()].iter().sum();
+                    tras.v[VarType::CstMet3pOp.tousz()].v =
+                        tras.vy[VarType::CstMet3pOp.tousz()].iter().sum();
+                    tras.v[VarType::CstTrOp.tousz()].v =
+                        tras.vy[VarType::CstTrOp.tousz()].iter().sum();
+                    tras.v[VarType::CstBessOp.tousz()].v =
+                        tras.vy[VarType::CstBessOp.tousz()].iter().sum();
+                    tras.v[VarType::CstPlfmOp.tousz()].v =
+                        tras.vy[VarType::CstPlfmOp.tousz()].iter().sum();
+                    tras.v[VarType::CstCommOp.tousz()].v =
+                        tras.vy[VarType::CstCommOp.tousz()].iter().sum();
+
+                    tras.v[VarType::EirCustLossSave.tousz()].v =
+                        tras.vy[VarType::EirCustLossSave.tousz()].iter().sum();
+                    tras.v[VarType::EirConsumSave.tousz()].v =
+                        tras.vy[VarType::EirConsumSave.tousz()].iter().sum();
+                    tras.v[VarType::EirGrnHsEmsSave.tousz()].v =
+                        tras.vy[VarType::EirGrnHsEmsSave.tousz()].iter().sum();
+                    tras.v[VarType::EirCustMvRev.tousz()].v =
+                        tras.vy[VarType::EirCustMvRev.tousz()].iter().sum();
+                    tras.v[VarType::EirCustEvSave.tousz()].v =
+                        tras.vy[VarType::EirCustEvSave.tousz()].iter().sum();
+                    tras.v[VarType::EirCustEtrkSave.tousz()].v =
+                        tras.vy[VarType::EirCustEtrkSave.tousz()].iter().sum();
+                    tras.v[VarType::EirSolaRfTopSave.tousz()].v =
+                        tras.vy[VarType::EirSolaRfTopSave.tousz()].iter().sum();
+                    tras.v[VarType::EirEnerResvSave.tousz()].v =
+                        tras.vy[VarType::EirEnerResvSave.tousz()].iter().sum();
+
+                    ass_calc(tras)?;
+                }
+                let bin: Vec<u8> =
+                    bincode::encode_to_vec(&v_tras_raw, bincode::config::standard()).unwrap();
+                std::fs::write(format!("{dnm}/{sid}-rw4.bin"), bin).unwrap();
+            }
+        }
+    }
+    println!("cn:{cn} sm:{sm}");
     Ok(())
 }

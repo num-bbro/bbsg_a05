@@ -382,6 +382,10 @@ pub struct PeaAssVar {
     pub vy: Vec<Vec<f32>>,
 }
 
+pub trait Geo {
+    fn n1d_2_utm(&self) -> (f32, f32);
+    fn n1d_2_latlon(&self) -> (f32, f32);
+}
 pub trait Pan {
     fn san(v: &str) -> String;
     fn pan0(&self) -> String;
@@ -760,7 +764,7 @@ pub const OPEX_FLDS: [VarType; 6] = [
     VarType::CstCommOp,
 ];
 
-pub const SHOW_FLDS: [VarType; 62] = [
+pub const SHOW_FLDS: [VarType; 70] = [
     VarType::FirEvChgThb,
     VarType::FirEtChgThb,
     VarType::FirEbChgThb,
@@ -815,6 +819,15 @@ pub const SHOW_FLDS: [VarType; 62] = [
     VarType::CstCapOpEx,
     VarType::FirSum,
     VarType::FirCstRate,
+    // ===== SCOPE
+    VarType::NoTr,
+    VarType::NoPeaTr,
+    VarType::NoCusTr,
+    VarType::NoMet1Ph,
+    VarType::NoMet3Ph,
+    VarType::BessMWh,
+    VarType::NoBess,
+    VarType::NoDevice,
     // ===== SUM
     VarType::EirCustLossSave,
     VarType::EirConsumSave,

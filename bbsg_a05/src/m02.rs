@@ -87,7 +87,7 @@ pub async fn m02() -> WebTemp {
         let unba = sr.v[VarType::MaxPosPowSub as usize].v;
         let ovld = sr.v[VarType::MaxNegPowSub as usize].v;
         let povl = sr.v[VarType::VsppMv as usize].v;
-        let smal = -sr.v[VarType::SolarEnergy as usize].v;
+        let smal = sr.v[VarType::SolarEnergy as usize].v;
 
         let rw = WebTempRow {
             sbid: sr.sbid.to_string(),

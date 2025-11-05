@@ -286,3 +286,58 @@ pub fn eb_scurv() -> Vec<f32> {
     }
     curv
 }
+
+use bincode::{Decode, Encode};
+use calamine::open_workbook;
+use calamine::Reader;
+use calamine::Xlsx;
+use std::path::PathBuf;
+
+#[derive(Debug, Encode, Decode)]
+pub struct XlsSheet {
+    pub path: String,
+    pub name: String,
+    pub shnm: String,
+    pub rcnt: usize,
+    pub ccnt: usize,
+    pub data: Vec<Vec<String>>,
+}
+
+pub fn load_xlsx(flst: &Vec<&str>) -> Result<Vec<XlsSheet>, Box<dyn std::error::Error>> {
+    let mut xlsv = Vec::<XlsSheet>::new();
+    for fl in flst {
+        let pt = PathBuf::from(fl);
+        let mut excel: Xlsx<_> = open_workbook(fl)?;
+        let ff = pt.file_name().unwrap().to_str().unwrap();
+        let sheets = excel.sheet_names().to_owned();
+        for sh in &sheets {
+            if let Ok(range) = excel.worksheet_range(sh) {
+                let path = fl.to_string();
+                let name = ff.to_string();
+                let shnm = sh.to_string();
+                let rcnt = range.get_size().0;
+                let ccnt = range.get_size().1;
+                let mut data = Vec::<Vec<String>>::new();
+
+                for row in range.rows() {
+                    let mut rw = Vec::<String>::new();
+                    for c in row {
+                        rw.push(c.to_string());
+                    }
+                    data.push(rw);
+                }
+
+                let xls_info = XlsSheet {
+                    path,
+                    name,
+                    shnm,
+                    rcnt,
+                    ccnt,
+                    data,
+                };
+                xlsv.push(xls_info);
+            }
+        }
+    }
+    Ok(xlsv)
+}
