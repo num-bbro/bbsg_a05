@@ -384,7 +384,7 @@ pub fn ben_bess_calc(
     let sola = sbas.v[VarType::SolarEnergy.tousz()].v;
     let sort = sola / trlm;
 
-    pub const BESS_YEAR_TO_FULL: f32 = 50.0;
+    pub const BESS_YEAR_TO_FULL: f32 = 20.0;
     pub const BESS_SOLA_RATIO: f32 = 0.5;
     //println!("   >>>>>> SOLAR ENERGY {sola}");
 
@@ -396,9 +396,7 @@ pub fn ben_bess_calc(
     }
 
     //if sb.sbtp == "AIS" && yrno < BESS_YEAR_TO_FULL as usize && sort > BESS_SOLA_RATIO {
-    //if sb.sbtp == "AIS" && sort > BESS_SOLA_RATIO && yrno < BESS_YEAR_TO_FULL as usize {
-    //if sb.sbtp == "AIS" && sort > BESS_SOLA_RATIO {
-    if ["GIS", "AIS"].contains(&sb.sbtp.as_str()) && sort > BESS_SOLA_RATIO {
+    if sb.sbtp == "AIS" && sort > BESS_SOLA_RATIO && yrno < BESS_YEAR_TO_FULL as usize {
         println!("BEN_BESS 2 >>>>>>> {sola} =============");
 
         // day load profile
@@ -466,13 +464,11 @@ pub fn ben_bess_calc(
         //ls_ex_en = ls_ex_sm * 0.25f32;
 
         pub const BESS_CAP_SOLAR_RATIO: f32 = 0.5;
-        pub const BESS_CAP_PILOT_MAX: f32 = 1.0;
 
         ls_ex_en = sola * BESS_CAP_SOLAR_RATIO;
-        if ls_ex_en > BESS_CAP_PILOT_MAX {
-            ls_ex_en = BESS_CAP_PILOT_MAX;
+        if ls_ex_en > 20f32 {
+            ls_ex_en = 20f32;
         }
-        //println!("BEN_BESS 3 >>>>>>> {ls_ex_en} =============");
 
         // load profile of year 2024
         let tm_pf: Vec<_> = if let Some(reps) = &sb.lp_rep_24.pos_rep.val {
@@ -595,7 +591,6 @@ pub fn ben_bess_calc(
         }
         _ac_ex_sm *= BC_NO_DAY_IN_YEAR as f32;
         _ac_ex_be *= BC_NO_DAY_IN_YEAR as f32;
-        println!("BEN_BESS 4 >>>>>>> {ls_ex_en} =============");
         println!( "====  trlm:{trlm} trcr:{trcr} pwmx:{pwmx} yrno:{yrno} grw:{grw} mxrt:{mxrt} sbsav:{sbsav}");
     }
     // ======= END =======

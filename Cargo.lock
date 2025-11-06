@@ -512,6 +512,7 @@ dependencies = [
  "financial",
  "geo",
  "geo-types",
+ "headless_chrome",
  "image 0.25.8",
  "imageproc",
  "iterstats",

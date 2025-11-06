@@ -757,6 +757,7 @@ pub fn stage_03_a() -> Result<(), Box<dyn Error>> {
                 sbas.arid = aid.to_string();
                 sbas.pvid = pid.to_string();
                 sbas.sbid = tras.sbid.to_string();
+                sbas.n1d = sb.n1d_s;
                 let note = if subhs.contains(&sbas.sbid) {
                     1f32
                 } else {
@@ -851,6 +852,9 @@ pub fn stage_03_a() -> Result<(), Box<dyn Error>> {
                 let nobess = if bescap > 0f32 { 1.0 } else { 0.0 };
                 sbas.v[VarType::BessMWh.tousz()].v = bescap;
                 sbas.v[VarType::NoBess.tousz()].v = nobess;
+                if nobess > 0.0 {
+                    println!(" ================ sb:{sid} nobess:{nobess}");
+                }
 
                 sbas.vy[VarType::FirBatSubSave.tousz()].retain(|&_| false);
                 sbas.vy[VarType::FirBatSvgSave.tousz()].retain(|&_| false);
