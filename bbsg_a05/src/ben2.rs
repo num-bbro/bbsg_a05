@@ -14,6 +14,20 @@ use sglib04::web1::UNIT_PRICE;
 
 pub const SMETER_ACCU_IMPRV: f32 = 0.01f32;
 pub const SMETER_BILL_IMPRV: f32 = 0.4f32;
+pub const BESS_YEAR_TO_FULL: f32 = 50.0;
+pub const BESS_SOLA_RATIO: f32 = 0.5;
+
+pub const CASH_FLOW_COST: f32 = 0.0569; // cash flow cost per day
+pub const CASH_DAY_DELAY_80: f32 = 2.5; // days delays for 80% of meter
+pub const CASH_DAY_DELAY_20: f32 = 12.5; // days delays for 80% of meter
+pub const CASH_DAY_DELAY_SMART: f32 = 2.0;
+
+pub const DR_DEV_PLAN_RATE: f32 = 0.02f32;
+pub const MET_1PH_COST: f32 = 2_500.0;
+pub const MET_3PH_COST: f32 = 4_500.0;
+
+pub const BOX_LINE_NEED_RATE: f32 = 0.05f32;
+pub const BOX_LINE_UNIT_COST: f32 = 172.41f32;
 
 pub fn ben_bill_accu(tras: &PeaAssVar) -> Vec<f32> {
     let mut proj = vec![0.0, 0.0, 0.0];
@@ -28,11 +42,6 @@ pub fn ben_bill_accu(tras: &PeaAssVar) -> Vec<f32> {
     }
     proj
 }
-
-pub const CASH_FLOW_COST: f32 = 0.0569; // cash flow cost per day
-pub const CASH_DAY_DELAY_80: f32 = 2.5; // days delays for 80% of meter
-pub const CASH_DAY_DELAY_20: f32 = 12.5; // days delays for 80% of meter
-pub const CASH_DAY_DELAY_SMART: f32 = 2.0;
 
 pub fn ben_cash_flow(tras: &PeaAssVar) -> Vec<f32> {
     let al0 = tras.v[VarType::AllSellTr.tousz()].v;
@@ -53,10 +62,6 @@ pub fn ben_cash_flow(tras: &PeaAssVar) -> Vec<f32> {
     }
     proj
 }
-
-pub const DR_DEV_PLAN_RATE: f32 = 0.02f32;
-pub const MET_1PH_COST: f32 = 2_500.0;
-pub const MET_3PH_COST: f32 = 4_500.0;
 
 pub fn ben_dr_save(tras: &PeaAssVar) -> Vec<f32> {
     //let cap1 = 80_000_000f64 / 22_000_000f64;
@@ -84,9 +89,6 @@ pub fn ben_dr_save(tras: &PeaAssVar) -> Vec<f32> {
     }
     proj
 }
-
-pub const BOX_LINE_NEED_RATE: f32 = 0.05f32;
-pub const BOX_LINE_UNIT_COST: f32 = 172.41f32;
 
 pub fn ben_boxline_save(tras: &PeaAssVar) -> Vec<f32> {
     //print!("====  BOX : ");
@@ -384,8 +386,6 @@ pub fn ben_bess_calc(
     let sola = sbas.v[VarType::SolarEnergy.tousz()].v;
     let sort = sola / trlm;
 
-    pub const BESS_YEAR_TO_FULL: f32 = 50.0;
-    pub const BESS_SOLA_RATIO: f32 = 0.5;
     //println!("   >>>>>> SOLAR ENERGY {sola}");
 
     if sola > 0f32 {
@@ -454,13 +454,13 @@ pub fn ben_bess_calc(
         }
 
         // power and energy of the last year
-        let mut ls_ex_sm = 0f32;
+        let mut _ls_ex_sm = 0f32;
         let mut ls_ex_pw = 0f32;
         for tm_pf in yr_daypf[BC_PROJ_YLEN].iter() {
             let dv = tm_pf - trcr;
             if dv >= 0f32 {
                 ls_ex_pw = dv.max(ls_ex_pw);
-                ls_ex_sm += dv;
+                _ls_ex_sm += dv;
             }
         }
         //ls_ex_en = ls_ex_sm * 0.25f32;

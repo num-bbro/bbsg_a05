@@ -110,10 +110,18 @@
 [ feeder:{{fdid}} ]
 &nbsp;&nbsp;&nbsp;  
 [
-{% for fdid in &sbinf.feeders %}
-  <a href="?fld={{fld}}&sbid={{sbid}}&fdid={{fdid}}">{{fdid}}</a>
+{% for fdid0 in &sbinf.feeders %}
+{% if fdid0==&fdid %}
+<b style="color: green;">{{fdid0}}</b>
+{% else %}
+  <a href="?fld={{fld}}&sbid={{sbid}}&fdid={{fdid0}}">{{fdid0}}</a>
+{% endif %}
 {% endfor %}
 ]
+  <a href="fda01?fld={{fld}}&sbid={{sbid}}&fdid={{fdid}}">IMG1</a>
+  <a href="fda02?fld={{fld}}&sbid={{sbid}}&fdid={{fdid}}">IMG2</a>
+  <a href="fdw01?fdid={{fdid}}">IMG1</a>
+  <a href="fdw02?fdid={{fdid}}">IMG2</a>
 </div>
 <table class="blueTable">
 <thead>

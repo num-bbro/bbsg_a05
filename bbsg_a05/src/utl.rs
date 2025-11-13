@@ -341,3 +341,98 @@ pub fn load_xlsx(flst: &Vec<&str>) -> Result<Vec<XlsSheet>, Box<dyn std::error::
     }
     Ok(xlsv)
 }
+
+use crate::p02::FeederLoadProf;
+use crate::p02::SubLoadProf;
+use std::collections::HashMap;
+
+pub static LP24FD: OnceLock<HashMap<String, FeederLoadProf>> = OnceLock::new();
+pub fn lp24_fd() -> &'static HashMap<String, FeederLoadProf> {
+    LP24FD.get_or_init(lp24_fd_init)
+}
+fn lp24_fd_init() -> HashMap<String, FeederLoadProf> {
+    let yr = 2024;
+    let fnm = format!("/mnt/e/CHMBACK/pea-data/data2/p02_read_lp_{yr}.bin");
+    let bytes = std::fs::read(fnm).unwrap();
+    let (lps, _): (HashMap<String, FeederLoadProf>, usize) =
+        bincode::decode_from_slice(&bytes[..], bincode::config::standard()).unwrap();
+    lps
+}
+
+pub static LP24SB: OnceLock<HashMap<String, SubLoadProf>> = OnceLock::new();
+pub fn lp24_sb() -> &'static HashMap<String, SubLoadProf> {
+    LP24SB.get_or_init(lp24_sb_init)
+}
+fn lp24_sb_init() -> HashMap<String, SubLoadProf> {
+    let yr = 2024;
+    let fnm = format!("/mnt/e/CHMBACK/pea-data/data2/p02_sub_lp_{yr}.bin");
+    let bytes = std::fs::read(fnm).unwrap();
+    let (subh, _): (HashMap<String, SubLoadProf>, usize) =
+        bincode::decode_from_slice(&bytes[..], bincode::config::standard()).unwrap();
+    subh
+}
+
+use std::error::Error;
+
+pub fn calc_fd_lp(lp: &FeederLoadProf) -> Result<(Vec<usize>, Vec<usize>), Box<dyn Error>> {
+    let mut po_lst = Vec::<(f32, usize)>::new();
+    let mut ne_lst = Vec::<(f32, usize)>::new();
+    for (di, dlp) in lp.days.iter().enumerate() {
+        if let Some(dlp) = dlp {
+            let mut po_pw = 0.0;
+            let mut ne_pw = 0.0;
+            for v in dlp.val.into_iter().flatten() {
+                if v > 0.0 {
+                    po_pw += v;
+                }
+                if v < 0.0 {
+                    ne_pw += -v;
+                }
+            }
+            if po_pw > 0.0 {
+                po_lst.push((po_pw, di));
+            }
+            if ne_pw > 0.0 {
+                ne_lst.push((ne_pw, di));
+            }
+        }
+    }
+    po_lst.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+    let mut po_lst2 = Vec::<usize>::new();
+    for (_v, i) in po_lst {
+        if let Some(dlp) = &lp.days[i]
+            && !dlp.is_valid()
+        {
+            break;
+        }
+        po_lst2.push(i);
+    }
+    ne_lst.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+    let mut ne_lst2 = Vec::<usize>::new();
+    for (_v, i) in ne_lst {
+        if let Some(dlp) = &lp.days[i]
+            && !dlp.is_valid()
+        {
+            break;
+        }
+        ne_lst2.push(i);
+    }
+    Ok((po_lst2, ne_lst2))
+}
+
+use crate::p03::p03_draw_sub_av;
+
+pub fn test_lp24() -> Result<(), Box<dyn Error>> {
+    let sblp = lp24_sb();
+    println!("lp24 sb {}", sblp.len());
+    for (k, sb) in sblp {
+        println!("sub - {k}");
+        for (fk, ldpf) in &sb.fdldp {
+            let (pov, nev) = calc_fd_lp(ldpf)?;
+            let po_lp = p03_draw_sub_av(ldpf, &pov, "PO")?;
+            let ne_lp = p03_draw_sub_av(ldpf, &nev, "NE")?;
+            println!("  {fk} po:{} ne:{}", pov.len(), nev.len());
+        }
+    }
+    Ok(())
+}

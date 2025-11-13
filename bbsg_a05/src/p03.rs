@@ -12,7 +12,7 @@ pub const LOAD_PROF_MAX_DAYS: usize = 30;
 pub const LOAD_PROF_MIN_HOUR: usize = 18;
 
 impl DayLoadProf {
-    fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         let mut hrls = vec![];
         for (vi, v) in self.val.iter().enumerate() {
             if v.is_some() {

@@ -39,6 +39,7 @@ pub mod tr04;
 pub mod tr05;
 pub mod tr06;
 // web
+pub mod img;
 pub mod web;
 //
 pub mod ben1;

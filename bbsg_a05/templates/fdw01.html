@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <title>{{name}}</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+.tooltip {
+	position: relative;
+  /*  position: absolute; */
+  /*display: inline-block; */
+}
+
+.tooltiptext {
+  visibility: hidden;
+  width: 200px;
+  background-color: black;
+  color: white;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 1s;
+  position: absolute;
+  z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+  opacity: 1;
+  visibility: visible;
+}
+
+.tooltip:hover .tooltiptext {
+	opacity: 1;
+	transition: opacity .8s;
+}
+
+.tooltip .tooltiptext:hover {
+	opacity: 1;
+	transition: opacity .8s;
+}
+
+</style>
+</head>
+<body>
+  <img src='/fda01?fdid={{fdid}}' usemap="#sg-map"/>
+
+  <map name='sg-map'>
+  {% for row in json %}
+  {% let url = format!("https://www.google.com/maps/search/?api=1&query={},{}", row.4, row.5) %}
+  <span class="tooltip">
+  <area shape='circle' coords='{{row.0}},{{row.1}},{{row.2}}' alt='{{row.3}}' href='{{url}}'>
+  <span class="tooltiptext"> {{row.3}} </span>
+  </span>
+  {% endfor %}
+  </map>
+
+</body>
+</html>
+

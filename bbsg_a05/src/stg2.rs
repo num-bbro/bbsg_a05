@@ -870,6 +870,7 @@ pub fn stage_02_3(
                     for (i, rt) in evsc.iter().enumerate() {
                         let evno = tras.v[VarType::HmChgEvTr.tousz()].v * EV_AT_2050 * rt;
                         tras0.vy[VarType::NoHmChgEvTr.tousz()].push(evno);
+                        tras0.vy[VarType::PowHmChgEvTr.tousz()].push(evno * 0.007f32);
                         // ev car charger is 7kw
                         // everage charge 2 hour / day
                         // everage charge 1.5 hour / day

@@ -24,6 +24,10 @@ pub mod sbb13;
 // tra
 pub mod tra01;
 // fda
+pub mod fda01;
+pub mod fdw01;
+pub mod fdw02;
+//pub mod fda02;
 
 pub const SBB_MENU: [(&str, &str, &str); 13] = [
     (

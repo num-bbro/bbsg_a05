@@ -7,6 +7,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let now = std::time::SystemTime::now();
     let a1 = env::args().nth(1).unwrap_or("?".to_string());
     match a1.as_str() {
+        "LPT" => bbsg_a05::utl::test_lp24()?,
         "SBL" => bbsg_a05::p09::sub_load()?,
         "03A" => bbsg_a05::stg3::stage_03_a()?,
         "2A" => {

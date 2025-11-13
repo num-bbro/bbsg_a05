@@ -514,6 +514,7 @@ dependencies = [
  "geo-types",
  "headless_chrome",
  "image 0.25.8",
+ "image-blend",
  "imageproc",
  "iterstats",
  "num",
@@ -521,6 +522,7 @@ dependencies = [
  "phf_macros 0.12.1",
  "regex",
  "serde",
+ "serde_json",
  "sglab02_lib",
  "sglib03",
  "sglib04",
@@ -2011,6 +2013,17 @@ dependencies = [
  "tiff 0.10.3",
  "zune-core",
  "zune-jpeg",
+]
+
+[[package]]
+name = "image-blend"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "86402ce4b6613c38d007e0e8d39601213b23f5225b8e66bf95fa817c02dc9d20"
+dependencies = [
+ "image 0.25.8",
+ "num-traits",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
