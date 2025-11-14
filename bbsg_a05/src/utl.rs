@@ -429,8 +429,8 @@ pub fn test_lp24() -> Result<(), Box<dyn Error>> {
         println!("sub - {k}");
         for (fk, ldpf) in &sb.fdldp {
             let (pov, nev) = calc_fd_lp(ldpf)?;
-            let po_lp = p03_draw_sub_av(ldpf, &pov, "PO")?;
-            let ne_lp = p03_draw_sub_av(ldpf, &nev, "NE")?;
+            let _po_lp = p03_draw_sub_av(ldpf, &pov, "PO")?;
+            let _ne_lp = p03_draw_sub_av(ldpf, &nev, "NE")?;
             println!("  {fk} po:{} ne:{}", pov.len(), nev.len());
         }
     }

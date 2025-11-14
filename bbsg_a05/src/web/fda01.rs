@@ -11,10 +11,10 @@ pub struct Param {
 #[derive(Template, WebTemplate, Debug, Default)]
 #[template(path = "fda02.html")]
 pub struct WebTemp {
-    fdid: String,
+    //fdid: String,
     name: String,
 }
 
-pub async fn page(para: Query<Param>) -> WebTemp {
+pub async fn page(_para: Query<Param>) -> WebTemp {
     WebTemp::default()
 }

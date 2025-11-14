@@ -5,11 +5,14 @@ pub async fn web1() -> Result<(), Box<dyn Error>> {
     println!("web1");
     //let x: axum::routing::MethodRouter = get(crate::web::sbb01::sbb01);
     let app = axum::Router::new()
-        // sub
+        // sub image
         .route("/fda01", get(crate::img::fda01::get_image))
         .route("/fda02", get(crate::img::fda02::get_image))
+        .route("/fda03", get(crate::img::fda03::get_image))
         .route("/fdw01", get(crate::web::fdw01::page))
         .route("/fdw02", get(crate::web::fdw02::page))
+        .route("/fdw03", get(crate::web::fdw03::page))
+        // sub feeder
         .route("/tra01", get(crate::web::tra01::page))
         // field
         .route("/sbb01", get(crate::web::sbb01::page))

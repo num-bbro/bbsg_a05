@@ -764,7 +764,7 @@ pub const OPEX_FLDS: [VarType; 6] = [
     VarType::CstCommOp,
 ];
 
-pub const SHOW_FLDS: [VarType; 72] = [
+pub const SHOW_FLDS: [VarType; 75] = [
     VarType::FirEvChgThb,
     VarType::FirEtChgThb,
     VarType::FirEbChgThb,
@@ -830,6 +830,9 @@ pub const SHOW_FLDS: [VarType; 72] = [
     VarType::NoDevice,
     VarType::NoHmChgEvTr,
     VarType::PowHmChgEvTr,
+    VarType::AllSellTr,
+    VarType::MaxNegPowSub,
+    VarType::SolarEnergy,
     // ===== SUM
     VarType::EirCustLossSave,
     VarType::EirConsumSave,

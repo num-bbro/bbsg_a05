@@ -18,7 +18,7 @@ use imageproc::drawing::draw_filled_circle_mut;
 use imageproc::drawing::draw_line_segment_mut;
 use serde::Deserialize;
 use serde_json::Value;
-use sglab02_lib::sg::mvline::latlong_utm;
+//use sglab02_lib::sg::mvline::latlong_utm;
 use sglab02_lib::sg::mvline::utm_latlong;
 //use sglib04::aoj::meter_pixel_to_zoom_lat;
 use sglib04::aoj::zoom_to_meter_pixel_lat;

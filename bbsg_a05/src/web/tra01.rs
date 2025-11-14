@@ -241,7 +241,8 @@ pub async fn page(para: Query<Param>) -> WebTemp {
     let fdid = if let Some(fdid) = &para.fdid {
         fdid.clone()
     } else {
-        format!("{sbid}01")
+        "".to_string()
+        //format!("{sbid}01")
     };
     let Some(se_fld) = fldm.get(&fld) else {
         println!("NO SELECTED FIELD");
@@ -261,7 +262,7 @@ pub async fn page(para: Query<Param>) -> WebTemp {
     };
     let assv0 = assv0
         .iter()
-        .filter(|a| a.fdid == fdid && a.own == "P")
+        .filter(|a| fdid.is_empty() || (a.fdid == fdid && a.own == "P"))
         .cloned()
         .collect::<Vec<_>>();
     let mut sumv = PeaAssVar::from(0u64);
